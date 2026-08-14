@@ -18,7 +18,6 @@ export const TRACKS: Track[] = [
   { id: "0NFxcNheoLc", title: "Banjaara", artist: "Mohammed Irfan" },
   { id: "69pPYkGiEAQ", title: "Kisi Ki Muskurahaton Pe Ho Nisar", artist: "Mukesh" },
   { id: "hoNb6HuNmU0", title: "KHAIRIYAT", artist: "Arijit Singh" },
-  { id: "VdyBtGaspss", title: "Chahun Main Ya Naa", artist: "Arijit Singh & Palak Muchhal" },
   { id: "5gwy0gcjIkI", title: "Tere Sang Yaara", artist: "Atif Aslam" },
   { id: "CxAWKewvooo", title: "Saude Bazi", artist: "Anupam Amod" },
   { id: "w9Qo6p4XsXE", title: "Ye Tune Kya Kiya", artist: "Javed Bashir" },
