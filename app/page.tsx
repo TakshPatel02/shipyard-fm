@@ -84,7 +84,19 @@ export default function Home() {
       </div>
 
       {/* Subtle Vignette Overlay for Readability */}
-      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/60 pointer-events-none z-10" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none z-10" />
+
+      {/* Hero Center Title: THE SHIPYARD */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4 z-15 -translate-y-10 sm:-translate-y-14">
+        <div className="flex flex-col items-center">
+          <h1 className="font-mono text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-[0.25em] text-white/90 uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
+            THE SHIPYARD
+          </h1>
+          <p className="font-mono text-[12px] sm:text-sm text-white/50 tracking-[0.3em] uppercase mt-2 drop-shadow-md">
+            BUILT FROM NOSTALGIA, RUNS ON MUSIC
+          </p>
+        </div>
+      </div>
 
       {/* 
         Top Header Bar:
