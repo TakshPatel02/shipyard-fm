@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     default: "Shipyard | Cozy Coding Space with Music",
     template: "%s | Shipyard",
   },
+  verification: {
+    google: "AIsWa1z2o3nSgk262N0vfNRxoKKcRw1gV59jGxLiGds",
+  },
   description:
     "Shipyard is a cozy, time-aware developer workspace that shifts with the time of day, paired with a minimal YouTube-playlist music player. Built by Taksh Patel, inspired by saloon.wtf.",
   keywords: [
