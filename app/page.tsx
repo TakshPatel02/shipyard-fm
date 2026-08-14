@@ -84,7 +84,7 @@ export default function Home() {
       </div>
 
       {/* Subtle Vignette Overlay for Readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none z-10" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/60 pointer-events-none z-10" />
 
       {/* 
         Top Header Bar:
