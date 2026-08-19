@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { TRACKS } from "../lib/music-data";
 
 declare global {
@@ -26,12 +26,15 @@ export default function MusicPlayer() {
   const [volume, setVolume] = useState<number>(70);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [showVideo, setShowVideo] = useState<boolean>(false);
+  const [isRepeat, setIsRepeat] = useState<boolean>(false);
+  const [repeatCount, setRepeatCount] = useState<number>(0);
 
   const playerRef = useRef<any>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const trackIndexRef = useRef<number>(0);
   const isPlayingRef = useRef<boolean>(false);
   const isUserPausedRef = useRef<boolean>(true);
+  const isRepeatRef = useRef<boolean>(false);
 
   useEffect(() => {
     trackIndexRef.current = trackIndex;
@@ -40,6 +43,10 @@ export default function MusicPlayer() {
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
+
+  useEffect(() => {
+    isRepeatRef.current = isRepeat;
+  }, [isRepeat]);
 
   const currentTrack = TRACKS[trackIndex];
 
@@ -53,7 +60,7 @@ export default function MusicPlayer() {
           const dur = playerRef.current.getDuration() || 0;
           setCurrentTime(cur);
           setDuration(dur);
-        } catch (e) {}
+        } catch (e) { }
       }
     }, 500);
   };
@@ -77,7 +84,7 @@ export default function MusicPlayer() {
           if (state === YTState?.PAUSED) {
             playerRef.current.playVideo();
           }
-        } catch (err) {}
+        } catch (err) { }
       }
     }, 300);
 
@@ -90,7 +97,7 @@ export default function MusicPlayer() {
             if (state !== YTState?.PLAYING && state !== YTState?.BUFFERING) {
               playerRef.current?.playVideo();
             }
-          } catch (e) {}
+          } catch (e) { }
         }, 100);
       }
     };
@@ -103,6 +110,32 @@ export default function MusicPlayer() {
       document.removeEventListener("visibilitychange", handleVisibilityOrBlur);
       window.removeEventListener("blur", handleVisibilityOrBlur);
     };
+  }, []);
+
+  const handleNextTrack = useCallback(() => {
+    // If repeat is on, replay the same track
+    if (isRepeatRef.current) {
+      setRepeatCount((prev) => prev + 1);
+      setCurrentTime(0);
+      isUserPausedRef.current = false;
+      if (playerRef.current && typeof playerRef.current.seekTo === "function") {
+        playerRef.current.seekTo(0, true);
+        playerRef.current.playVideo();
+        setIsPlaying(true);
+      }
+      return;
+    }
+
+    const nextIdx = (trackIndexRef.current + 1) % TRACKS.length;
+    setTrackIndex(nextIdx);
+    setCurrentTime(0);
+    setDuration(0);
+    setRepeatCount(0);
+    isUserPausedRef.current = false;
+    if (playerRef.current && typeof playerRef.current.loadVideoById === "function") {
+      playerRef.current.loadVideoById(TRACKS[nextIdx].id);
+      setIsPlaying(true);
+    }
   }, []);
 
   // Initialize YouTube API and Player
@@ -130,7 +163,7 @@ export default function MusicPlayer() {
             setIsReady(true);
             try {
               event.target.setVolume(70);
-            } catch (err) {}
+            } catch (err) { }
           },
           onStateChange: (event: any) => {
             const YTState = window.YT.PlayerState;
@@ -144,7 +177,7 @@ export default function MusicPlayer() {
                 setTimeout(() => {
                   try {
                     playerRef.current?.playVideo();
-                  } catch (e) {}
+                  } catch (e) { }
                 }, 100);
               } else {
                 setIsPlaying(false);
@@ -184,7 +217,7 @@ export default function MusicPlayer() {
     return () => {
       stopProgressTracking();
     };
-  }, []);
+  }, [handleNextTrack]);
 
   const handlePlayPause = () => {
     if (!playerRef.current || !isReady) return;
@@ -197,23 +230,12 @@ export default function MusicPlayer() {
     }
   };
 
-  const handleNextTrack = () => {
-    const nextIdx = (trackIndexRef.current + 1) % TRACKS.length;
-    setTrackIndex(nextIdx);
-    setCurrentTime(0);
-    setDuration(0);
-    isUserPausedRef.current = false;
-    if (playerRef.current && typeof playerRef.current.loadVideoById === "function") {
-      playerRef.current.loadVideoById(TRACKS[nextIdx].id);
-      setIsPlaying(true);
-    }
-  };
-
   const handlePrevTrack = () => {
     const prevIdx = (trackIndexRef.current - 1 + TRACKS.length) % TRACKS.length;
     setTrackIndex(prevIdx);
     setCurrentTime(0);
     setDuration(0);
+    setRepeatCount(0);
     isUserPausedRef.current = false;
     if (playerRef.current && typeof playerRef.current.loadVideoById === "function") {
       playerRef.current.loadVideoById(TRACKS[prevIdx].id);
@@ -251,6 +273,16 @@ export default function MusicPlayer() {
     }
   };
 
+  const toggleRepeat = () => {
+    setIsRepeat((prev) => {
+      if (prev) {
+        // Turning repeat off — reset the counter
+        setRepeatCount(0);
+      }
+      return !prev;
+    });
+  };
+
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
@@ -260,11 +292,10 @@ export default function MusicPlayer() {
         When showVideo is false, we keep it in DOM with subtle opacity to prevent Chromium from throttling background tab audio.
       */}
       <div
-        className={`fixed z-40 transition-all duration-300 ${
-          showVideo
-            ? "bottom-6 right-6 w-70 h-39.5 opacity-100 scale-100"
-            : "bottom-2 right-2 w-70 h-39.5 opacity-[0.01] pointer-events-none -z-10"
-        }`}
+        className={`fixed z-40 transition-all duration-300 ${showVideo
+          ? "bottom-6 right-6 w-70 h-39.5 opacity-100 scale-100"
+          : "bottom-2 right-2 w-70 h-39.5 opacity-[0.01] pointer-events-none -z-10"
+          }`}
       >
         <div className="relative w-full h-full rounded-xl overflow-hidden border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.8)] bg-black group">
           <div id="youtube-player-frame" className="w-full h-full object-cover" />
@@ -280,36 +311,47 @@ export default function MusicPlayer() {
 
       {/* Main Portfolio-Style Segmented Player Box */}
       <div className="relative z-10 w-full rounded-xl bg-black/75 backdrop-blur-xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.75)] text-white overflow-hidden font-mono">
-        
+
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-3.5 sm:px-4 py-2 border-b border-white/10 text-[10px] text-white/40 tracking-wider">
           <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? "bg-emerald-400 animate-pulse" : "bg-white/30"}`} />
             <span>PLAYER // AUDIO STREAM</span>
           </div>
-          <span>FIG. 82</span>
+          <div className="flex items-center gap-3">
+            {/* Track counter in the header */}
+            <span className="tabular-nums">{String(trackIndex + 1).padStart(2, "0")} / {String(TRACKS.length).padStart(2, "0")}</span>
+            <span>FIG. 82</span>
+          </div>
         </div>
 
         {/* Middle Main Content Grid (Responsive Layout) */}
         <div className="flex flex-col sm:flex-row items-center p-3 sm:p-4 gap-3 sm:gap-4">
-          
+
           {/* Top/Left Row on Mobile: Album Art + Track Meta */}
           <div className="flex items-center gap-3 w-full sm:w-auto min-w-0 flex-1">
             {/* Vinyl Cover Art */}
             <div
               onClick={() => setShowVideo(!showVideo)}
-              className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden shrink-0 border border-white/20 shadow-md bg-black cursor-pointer group"
+              className={`relative w-13 h-13 sm:w-15 sm:h-15 rounded-full overflow-hidden shrink-0 border shadow-lg bg-black cursor-pointer group transition-all duration-300 ${isPlaying
+                ? "border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                : "border-white/15"
+                }`}
               title="Toggle video view"
             >
               <img
                 src={`https://img.youtube.com/vi/${currentTrack.id}/hqdefault.jpg`}
                 alt={currentTrack.title}
-                className={`w-full h-full object-cover ${isPlaying ? "animate-spin [animation-duration:8s]" : ""}`}
+                className={`w-full h-full object-cover transition-transform ${isPlaying ? "animate-spin [animation-duration:8s]" : ""}`}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${currentTrack.id}/mqdefault.jpg`;
                 }}
               />
               <div className="absolute inset-0 m-auto w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-stone-900 border border-white/30 shadow-inner group-hover:scale-125 transition-transform" />
+              {/* Subtle ring glow when playing */}
+              {isPlaying && (
+                <div className="absolute inset-0 rounded-full border border-white/10 animate-ping [animation-duration:3s] pointer-events-none" />
+              )}
             </div>
 
             {/* Track Info & Progress */}
@@ -324,10 +366,15 @@ export default function MusicPlayer() {
               </div>
 
               {/* Progress Line */}
-              <div className="relative w-full h-1 mt-2 rounded-full bg-white/15 overflow-hidden cursor-pointer">
+              <div className="relative w-full h-1 mt-2 rounded-full bg-white/10 overflow-hidden cursor-pointer group/progress">
                 <div
-                  className="absolute left-0 top-0 h-full bg-white rounded-full transition-all duration-150"
-                  style={{ width: `${progressPercent}%` }}
+                  className="absolute left-0 top-0 h-full rounded-full transition-all duration-150"
+                  style={{
+                    width: `${progressPercent}%`,
+                    background: isRepeat
+                      ? "linear-gradient(90deg, #a78bfa, #818cf8)"
+                      : "linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6))",
+                  }}
                 />
                 <input
                   type="range"
@@ -369,7 +416,7 @@ export default function MusicPlayer() {
             <button
               onClick={handlePrevTrack}
               aria-label="Previous Track"
-              className="px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all text-xs font-mono shrink-0"
+              className="px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all text-xs font-mono shrink-0 active:scale-95"
             >
               prev
             </button>
@@ -385,9 +432,40 @@ export default function MusicPlayer() {
             <button
               onClick={handleNextTrack}
               aria-label="Next Track"
-              className="px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all text-xs font-mono shrink-0"
+              className="px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all text-xs font-mono shrink-0 active:scale-95"
             >
               next
+            </button>
+
+            {/* Repeat Button */}
+            <button
+              onClick={toggleRepeat}
+              aria-label={isRepeat ? "Disable Repeat" : "Enable Repeat"}
+              className={`relative px-2.5 py-1.5 rounded-md border text-xs font-mono shrink-0 transition-all active:scale-95 ${isRepeat
+                ? "bg-violet-500/20 border-violet-400/40 text-violet-300 hover:bg-violet-500/30 shadow-[0_0_12px_rgba(139,92,246,0.15)]"
+                : "bg-white/5 hover:bg-white/15 border-white/10 text-white/80 hover:text-white"
+                }`}
+              title={isRepeat ? `Repeat ON — played ${repeatCount}×` : "Repeat OFF"}
+            >
+              <span className="flex items-center gap-1">
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform ${isRepeat ? "text-violet-300" : "text-white/60"}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 1l4 4-4 4" />
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                  <path d="M7 23l-4-4 4-4" />
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                </svg>
+                {isRepeat && repeatCount > 0 && (
+                  <span className="text-[9px] tabular-nums text-violet-300/90 font-semibold">{repeatCount}×</span>
+                )}
+              </span>
             </button>
           </div>
         </div>
@@ -398,6 +476,15 @@ export default function MusicPlayer() {
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
             <span className="truncate">songs are playing using youtube</span>
           </div>
+          {/* Repeat status badge in footer */}
+          {isRepeat && (
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <span className="w-1 h-1 rounded-full bg-violet-400 animate-pulse shrink-0" />
+              <span className="text-violet-400/80 truncate">
+                repeat on{repeatCount > 0 ? ` · ${repeatCount} loop${repeatCount !== 1 ? "s" : ""}` : ""}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
