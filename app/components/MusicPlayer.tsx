@@ -286,22 +286,23 @@ export default function MusicPlayer() {
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div className="flex flex-col items-center gap-2 select-none relative w-full max-w-140 mx-auto px-2">
+    <div className="flex flex-col items-center select-none relative w-full max-w-155 mx-auto px-2">
       {/* 
         YouTube Video Frame (Rendered with 320x180 dimensions in DOM).
         When showVideo is false, we keep it in DOM with subtle opacity to prevent Chromium from throttling background tab audio.
       */}
       <div
-        className={`fixed z-40 transition-all duration-300 ${showVideo
-          ? "bottom-6 right-6 w-70 h-39.5 opacity-100 scale-100"
-          : "bottom-2 right-2 w-70 h-39.5 opacity-[0.01] pointer-events-none -z-10"
-          }`}
+        className={`fixed z-40 transition-all duration-300 ${
+          showVideo
+            ? "bottom-6 right-6 w-70 h-39.5 opacity-100 scale-100"
+            : "bottom-2 right-2 w-70 h-39.5 opacity-[0.01] pointer-events-none -z-10"
+        }`}
       >
-        <div className="relative w-full h-full rounded-xl overflow-hidden border border-white/20 shadow-[0_16px_40px_rgba(0,0,0,0.8)] bg-black group">
+        <div className="relative w-full h-full rounded-lg overflow-hidden border border-zinc-800 shadow-2xl bg-black group">
           <div id="youtube-player-frame" className="w-full h-full object-cover" />
           <button
             onClick={() => setShowVideo(false)}
-            className="absolute top-2 right-2 bg-black/70 hover:bg-black text-white/80 p-1 rounded-md transition-colors opacity-0 group-hover:opacity-100 font-mono text-[10px]"
+            className="absolute top-2 right-2 bg-black/80 hover:bg-black text-zinc-400 hover:text-white px-2 py-0.5 rounded border border-zinc-800 transition-colors opacity-0 group-hover:opacity-100 font-mono text-[10px]"
             title="Hide video"
           >
             ✕
@@ -309,92 +310,200 @@ export default function MusicPlayer() {
         </div>
       </div>
 
-      {/* Main Portfolio-Style Segmented Player Box */}
-      <div className="relative z-10 w-full rounded-xl bg-black/75 backdrop-blur-xl border border-white/15 shadow-[0_20px_50px_rgba(0,0,0,0.75)] text-white overflow-hidden font-mono">
-
+      {/* Main Portfolio Bento Box */}
+      <div className="relative z-10 w-full rounded-xl bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 shadow-[0_16px_50px_rgba(0,0,0,0.85)] text-white font-mono overflow-hidden">
+        
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-3.5 sm:px-4 py-2 border-b border-white/10 text-[10px] text-white/40 tracking-wider">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 text-[10px] text-zinc-500 tracking-widest uppercase">
           <div className="flex items-center gap-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${isPlaying ? "bg-emerald-400 animate-pulse" : "bg-white/30"}`} />
-            <span>PLAYER // AUDIO STREAM</span>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                isPlaying ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"
+              }`}
+            />
+            <span className="text-zinc-400">01 / AUDIO STREAM</span>
           </div>
           <div className="flex items-center gap-3">
-            {/* Track counter in the header */}
-            <span className="tabular-nums">{String(trackIndex + 1).padStart(2, "0")} / {String(TRACKS.length).padStart(2, "0")}</span>
+            <span className="tabular-nums text-zinc-400">
+              {String(trackIndex + 1).padStart(2, "0")} / {String(TRACKS.length).padStart(2, "0")}
+            </span>
+            <span className="w-px h-3 bg-white/10" />
             <span>FIG. 82</span>
           </div>
         </div>
 
-        {/* Middle Main Content Grid (Responsive Layout) */}
-        <div className="flex flex-col sm:flex-row items-center p-3 sm:p-4 gap-3 sm:gap-4">
+        {/* Middle Main Content Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] divide-y sm:divide-y-0 sm:divide-x divide-white/10">
+          
+          {/* Left Grid: Framed Vinyl Disc */}
+          <div
+            onClick={() => setShowVideo(!showVideo)}
+            className="p-3 sm:p-3.5 flex flex-col items-center justify-between gap-2 bg-black/40 cursor-pointer group hover:bg-white/2 transition-colors"
+            title="Toggle video view"
+          >
+            <div className="w-full flex items-center justify-between text-[9px] text-zinc-600 tracking-widest uppercase">
+              <span>VINYL</span>
+              <span className="group-hover:text-zinc-400 transition-colors">⤢</span>
+            </div>
 
-          {/* Top/Left Row on Mobile: Album Art + Track Meta */}
-          <div className="flex items-center gap-3 w-full sm:w-auto min-w-0 flex-1">
-            {/* Vinyl Cover Art */}
-            <div
-              onClick={() => setShowVideo(!showVideo)}
-              className={`relative w-13 h-13 sm:w-15 sm:h-15 rounded-full overflow-hidden shrink-0 border shadow-lg bg-black cursor-pointer group transition-all duration-300 ${isPlaying
-                ? "border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-                : "border-white/15"
-                }`}
-              title="Toggle video view"
-            >
+            {/* Rotating Vinyl Record */}
+            <div className="relative w-20 h-20 sm:w-22 sm:h-22 rounded-full overflow-hidden border border-white/20 bg-black shadow-xl shrink-0 flex items-center justify-center">
+              {/* Vinyl Center Art */}
               <img
                 src={`https://img.youtube.com/vi/${currentTrack.id}/hqdefault.jpg`}
                 alt={currentTrack.title}
-                className={`w-full h-full object-cover transition-transform ${isPlaying ? "animate-spin [animation-duration:8s]" : ""}`}
+                className={`w-full h-full object-cover transition-transform ${
+                  isPlaying ? "animate-spin [animation-duration:9s]" : ""
+                }`}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${currentTrack.id}/mqdefault.jpg`;
                 }}
               />
-              <div className="absolute inset-0 m-auto w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-stone-900 border border-white/30 shadow-inner group-hover:scale-125 transition-transform" />
-              {/* Subtle ring glow when playing */}
+              
+              {/* Concentric Vinyl Grooves (Monochrome Portfolio Style) */}
+              <div className="absolute inset-0 rounded-full border-[5px] border-black/50 pointer-events-none" />
+              <div className="absolute inset-1.5 rounded-full border border-white/10 pointer-events-none" />
+              <div className="absolute inset-3.5 rounded-full border border-white/10 pointer-events-none" />
+              
+              {/* Center Spindle Hole */}
+              <div className="absolute inset-0 m-auto w-6 h-6 rounded-full bg-zinc-900 border border-white/30 flex items-center justify-center shadow-inner pointer-events-none">
+                <div className="w-2 h-2 rounded-full bg-black border border-white/40" />
+              </div>
+
+              {/* Subtle playing indicator pulse */}
               {isPlaying && (
-                <div className="absolute inset-0 rounded-full border border-white/10 animate-ping [animation-duration:3s] pointer-events-none" />
+                <div className="absolute -inset-0.5 rounded-full border border-white/10 animate-ping [animation-duration:3s] pointer-events-none" />
               )}
             </div>
 
-            {/* Track Info & Progress */}
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-baseline gap-1.5 truncate">
-                <span className="text-white/40 font-mono text-[10px] shrink-0">track //</span>
-                <span className="text-white font-mono font-semibold text-xs sm:text-sm truncate">{currentTrack.title}</span>
-              </div>
-              <div className="flex items-baseline gap-1.5 truncate mt-0.5">
-                <span className="text-white/40 font-mono text-[10px] shrink-0">artist //</span>
-                <span className="text-white/70 font-mono text-xs truncate">{currentTrack.artist}</span>
-              </div>
+            <span className="text-[8px] text-zinc-500 tracking-widest uppercase">
+              REC · {String(trackIndex + 1).padStart(2, "0")}
+            </span>
+          </div>
 
-              {/* Progress Line */}
-              <div className="relative w-full h-1 mt-2 rounded-full bg-white/10 overflow-hidden cursor-pointer group/progress">
-                <div
-                  className="absolute left-0 top-0 h-full rounded-full transition-all duration-150"
-                  style={{
-                    width: `${progressPercent}%`,
-                    background: isRepeat
-                      ? "linear-gradient(90deg, #a78bfa, #818cf8)"
-                      : "linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.6))",
-                  }}
-                />
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={progressPercent}
-                  onChange={handleSeekChange}
-                  className="seek-slider"
-                  title="Seek"
-                />
-              </div>
-
-              {/* Time & Volume Row (Guaranteed No Wrap) */}
-              <div className="flex items-center justify-between text-[10px] text-white/50 font-mono mt-1 whitespace-nowrap">
-                <span className="tabular-nums shrink-0 whitespace-nowrap">
+          {/* Right Grid: Track Meta, Scrubber & Controls */}
+          <div className="p-3.5 sm:p-4 flex flex-col justify-between gap-3">
+            
+            {/* Track Info */}
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[9px] text-zinc-500 tracking-widest uppercase">
+                  TRACK //
+                </span>
+                <span className="text-[9px] text-zinc-500 tabular-nums">
                   {formatTime(currentTime)} / {formatTime(duration)}
                 </span>
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  <button onClick={toggleMute} className="hover:text-white transition-colors" title="Mute">
+              </div>
+              <h2 className="text-white font-semibold text-sm sm:text-base truncate mt-0.5 tracking-tight">
+                {currentTrack.title}
+              </h2>
+              <div className="flex items-baseline gap-1.5 truncate mt-1">
+                <span className="text-[9px] text-zinc-500 tracking-widest uppercase">
+                  ARTIST //
+                </span>
+                <span className="text-zinc-400 text-xs truncate">
+                  {currentTrack.artist}
+                </span>
+              </div>
+            </div>
+
+            {/* Hairline Progress Scrubber */}
+            <div className="relative w-full group/progress cursor-pointer pt-1">
+              <div className="relative w-full h-0.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="absolute left-0 top-0 h-full rounded-full bg-white transition-all duration-150"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="0.1"
+                value={progressPercent}
+                onChange={handleSeekChange}
+                className="seek-slider"
+                title="Seek"
+              />
+            </div>
+
+            {/* Controls Bar */}
+            <div className="flex items-center justify-between pt-1 gap-2">
+              
+              {/* Transport Buttons */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={handlePrevTrack}
+                  aria-label="Previous Track"
+                  className="px-2.5 py-1 rounded bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-zinc-300 hover:text-white transition-all text-[10px] tracking-wider uppercase active:scale-95 cursor-pointer"
+                >
+                  prev
+                </button>
+
+                <button
+                  onClick={handlePlayPause}
+                  aria-label={isPlaying ? "Pause" : "Play"}
+                  className="px-3.5 py-1 rounded bg-white text-black font-semibold text-[10px] tracking-wider uppercase hover:bg-zinc-200 active:scale-95 transition-all shadow-sm cursor-pointer min-w-14.5 text-center"
+                >
+                  {isPlaying ? "pause" : "play"}
+                </button>
+
+                <button
+                  onClick={handleNextTrack}
+                  aria-label="Next Track"
+                  className="px-2.5 py-1 rounded bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-zinc-300 hover:text-white transition-all text-[10px] tracking-wider uppercase active:scale-95 cursor-pointer"
+                >
+                  next
+                </button>
+              </div>
+
+              {/* Repeat & Volume */}
+              <div className="flex items-center gap-2">
+                {/* Repeat Button */}
+                <button
+                  onClick={toggleRepeat}
+                  aria-label={isRepeat ? "Disable Repeat" : "Enable Repeat"}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] tracking-wider uppercase transition-all active:scale-95 cursor-pointer ${
+                    isRepeat
+                      ? "bg-zinc-800 border-white/30 text-white font-medium shadow-sm"
+                      : "bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                  }`}
+                  title={isRepeat ? `Repeat ON (${repeatCount} loops)` : "Enable Repeat"}
+                >
+                  <svg
+                    className="w-3 h-3"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17 1l4 4-4 4" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <path d="M7 23l-4-4 4-4" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  <span>loop</span>
+                </button>
+
+                {/* Repeat Count Tag */}
+                {isRepeat && (
+                  <div
+                    className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-emerald-400 text-[10px] font-mono font-semibold tracking-wider"
+                    title={`Played on loop ${repeatCount} times`}
+                  >
+                    {repeatCount > 0 ? `${repeatCount}×` : "1×"}
+                  </div>
+                )}
+
+                {/* Volume Slider */}
+                <div className="flex items-center gap-1.5 group/vol ml-1">
+                  <button
+                    onClick={toggleMute}
+                    className="text-zinc-500 hover:text-zinc-300 transition-colors text-[10px]"
+                    title="Mute"
+                  >
                     {isMuted || volume === 0 ? "🔇" : "🔊"}
                   </button>
                   <input
@@ -403,90 +512,36 @@ export default function MusicPlayer() {
                     max="100"
                     value={isMuted ? 0 : volume}
                     onChange={handleVolumeChange}
-                    className="vol-slider w-12 sm:w-16"
+                    className="vol-slider w-12 sm:w-16 opacity-40 group-hover/vol:opacity-100 transition-opacity"
                     title="Volume"
                   />
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Segmented Control Buttons */}
-          <div className="flex items-center gap-1.5 shrink-0 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 sm:border-l border-white/10 sm:pl-3">
-            <button
-              onClick={handlePrevTrack}
-              aria-label="Previous Track"
-              className="px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all text-xs font-mono shrink-0 active:scale-95"
-            >
-              prev
-            </button>
-
-            <button
-              onClick={handlePlayPause}
-              aria-label={isPlaying ? "Pause" : "Play"}
-              className="px-3.5 py-1.5 rounded-md bg-white text-black font-semibold text-xs font-mono shadow-md hover:bg-white/90 active:scale-95 transition-all shrink-0 min-w-14.5 text-center"
-            >
-              {isPlaying ? "pause" : "play"}
-            </button>
-
-            <button
-              onClick={handleNextTrack}
-              aria-label="Next Track"
-              className="px-2.5 py-1.5 rounded-md bg-white/5 hover:bg-white/15 border border-white/10 text-white/80 hover:text-white transition-all text-xs font-mono shrink-0 active:scale-95"
-            >
-              next
-            </button>
-
-            {/* Repeat Button */}
-            <button
-              onClick={toggleRepeat}
-              aria-label={isRepeat ? "Disable Repeat" : "Enable Repeat"}
-              className={`relative px-2.5 py-1.5 rounded-md border text-xs font-mono shrink-0 transition-all active:scale-95 ${isRepeat
-                ? "bg-violet-500/20 border-violet-400/40 text-violet-300 hover:bg-violet-500/30 shadow-[0_0_12px_rgba(139,92,246,0.15)]"
-                : "bg-white/5 hover:bg-white/15 border-white/10 text-white/80 hover:text-white"
-                }`}
-              title={isRepeat ? `Repeat ON — played ${repeatCount}×` : "Repeat OFF"}
-            >
-              <span className="flex items-center gap-1">
-                <svg
-                  className={`w-3.5 h-3.5 transition-transform ${isRepeat ? "text-violet-300" : "text-white/60"}`}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M17 1l4 4-4 4" />
-                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-                  <path d="M7 23l-4-4 4-4" />
-                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-                </svg>
-                {isRepeat && repeatCount > 0 && (
-                  <span className="text-[9px] tabular-nums text-violet-300/90 font-semibold">{repeatCount}×</span>
-                )}
-              </span>
-            </button>
-          </div>
         </div>
 
-        {/* Bottom Footer inside Card */}
-        <div className="px-3.5 sm:px-4 py-1.5 border-t border-white/10 text-[10px] text-white/40 font-mono flex items-center justify-between truncate">
-          <div className="flex items-center gap-1.5 truncate">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-            <span className="truncate">songs are playing using youtube</span>
+        {/* Bottom Bar: Source & Personal Loop Status */}
+        <div className="px-4 py-1.5 border-t border-white/10 text-[10px] text-zinc-500 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] tracking-widest uppercase text-zinc-600">SOURCE:</span>
+            <span className="text-zinc-400">YouTube</span>
           </div>
-          {/* Repeat status badge in footer */}
-          {isRepeat && (
-            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-              <span className="w-1 h-1 rounded-full bg-violet-400 animate-pulse shrink-0" />
-              <span className="text-violet-400/80 truncate">
-                repeat on{repeatCount > 0 ? ` · ${repeatCount} loop${repeatCount !== 1 ? "s" : ""}` : ""}
+
+          <div className="flex items-center gap-1.5">
+            {isRepeat ? (
+              <span className="text-zinc-300">
+                LOOP · {repeatCount > 0 ? `${repeatCount} REPEATS` : "ACTIVE"}
               </span>
-            </div>
-          )}
+            ) : (
+              <span className="text-zinc-600 tracking-widest uppercase text-[9px]">
+                STATUS: READY
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
