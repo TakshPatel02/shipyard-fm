@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { TRACKS } from "../lib/music-data";
@@ -231,7 +231,7 @@ export default function MusicPlayer() {
     }
   };
 
-  const handlePrevTrack = () => {
+  const handlePrevTrack = useCallback(() => {
     const prevIdx = (trackIndexRef.current - 1 + TRACKS.length) % TRACKS.length;
     setTrackIndex(prevIdx);
     setCurrentTime(0);
@@ -242,7 +242,7 @@ export default function MusicPlayer() {
       playerRef.current.loadVideoById(TRACKS[prevIdx].id);
       setIsPlaying(true);
     }
-  };
+  }, []);
 
   const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newProgress = parseFloat(e.target.value);
@@ -283,6 +283,48 @@ export default function MusicPlayer() {
       return !prev;
     });
   };
+
+  // Set up Media Session API
+  useEffect(() => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title,
+        artist: currentTrack.artist,
+        artwork: [
+          { src: `https://img.youtube.com/vi/${currentTrack.id}/mqdefault.jpg`, sizes: "320x180", type: "image/jpeg" },
+          { src: `https://img.youtube.com/vi/${currentTrack.id}/hqdefault.jpg`, sizes: "480x360", type: "image/jpeg" }
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler("play", () => {
+        if (playerRef.current && typeof playerRef.current.playVideo === "function") {
+          isUserPausedRef.current = false;
+          playerRef.current.playVideo();
+        }
+      });
+      
+      navigator.mediaSession.setActionHandler("pause", () => {
+        if (playerRef.current && typeof playerRef.current.pauseVideo === "function") {
+          isUserPausedRef.current = true;
+          playerRef.current.pauseVideo();
+        }
+      });
+
+      navigator.mediaSession.setActionHandler("previoustrack", () => {
+        handlePrevTrack();
+      });
+
+      navigator.mediaSession.setActionHandler("nexttrack", () => {
+        handleNextTrack();
+      });
+    }
+  }, [currentTrack, handleNextTrack, handlePrevTrack]);
+
+  useEffect(() => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    }
+  }, [isPlaying]);
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
