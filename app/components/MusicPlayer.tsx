@@ -220,16 +220,16 @@ export default function MusicPlayer() {
     };
   }, [handleNextTrack]);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     if (!playerRef.current || !isReady) return;
-    if (isPlaying) {
+    if (isPlayingRef.current) {
       isUserPausedRef.current = true;
       playerRef.current.pauseVideo();
     } else {
       isUserPausedRef.current = false;
       playerRef.current.playVideo();
     }
-  };
+  }, [isReady]);
 
   const handlePrevTrack = useCallback(() => {
     const prevIdx = (trackIndexRef.current - 1 + TRACKS.length) % TRACKS.length;
@@ -325,6 +325,33 @@ export default function MusicPlayer() {
       navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
     }
   }, [isPlaying]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input/textarea
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        handlePlayPause();
+      } else if (e.code === "ArrowRight") {
+        e.preventDefault();
+        handleNextTrack();
+      } else if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        handlePrevTrack();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handlePlayPause, handleNextTrack, handlePrevTrack]);
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
