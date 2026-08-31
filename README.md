@@ -1,4 +1,4 @@
-﻿# Shipyard FM
+# Shipyard FM
 
 > **Built from nostalgia, runs on music.**
 
@@ -7,6 +7,18 @@ A cozy, time-aware developer workspace that shifts its background with the time 
 **Live at:** [shipyard-fm.vercel.app](https://shipyard-fm.vercel.app)
 
 ![Shipyard FM — Website Preview](./public/website.png)
+
+---
+
+## Why Shipyard (and not just a YouTube tab)?
+
+If you already listen to music while coding, you're probably doing it in a YouTube tab. Shipyard exists because that tab is doing a lot more than just playing audio — and most of it, you don't need.
+
+A regular YouTube tab loads the full video player, comments, engagement data, playlist metadata, and ads — even if you're just listening in the background. That adds up over time: in a 30-minute test with the same playlist, a YouTube tab climbed from ~348MB to 557MB+.
+
+Shipyard's tab alone stays flat around ~52MB, but counting the YouTube iframe's own background process too (visible separately in Chrome's Task Manager), Shipyard's real combined footprint is closer to ~110-130MB — still roughly 4-5x lower than a full YouTube tab doing the same job. The gap exists because Shipyard's player uses the YouTube iframe purely for audio — none of the comments, video engagement data, or ad infrastructure ever load.
+
+If you code with music on and don't want that RAM going to a browser tab instead of your IDE or build tools, this is what Shipyard is actually for.
 
 ---
 
