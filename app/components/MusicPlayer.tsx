@@ -17,6 +17,50 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
+const STORAGE_KEY = "shipyard-fm-player-state";
+
+interface PlayerState {
+  trackIndex: number;
+  currentTime: number;
+  volume: number;
+  isRepeat: boolean;
+}
+
+function loadPlayerState(): PlayerState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const item = localStorage.getItem(STORAGE_KEY);
+    if (!item) return null;
+    const parsed = JSON.parse(item);
+    if (
+      parsed &&
+      typeof parsed.trackIndex === "number" &&
+      !isNaN(parsed.trackIndex) &&
+      parsed.trackIndex >= 0 &&
+      parsed.trackIndex < TRACKS.length
+    ) {
+      return {
+        trackIndex: parsed.trackIndex,
+        currentTime: typeof parsed.currentTime === "number" && !isNaN(parsed.currentTime) ? parsed.currentTime : 0,
+        volume: typeof parsed.volume === "number" && !isNaN(parsed.volume) ? parsed.volume : 70,
+        isRepeat: Boolean(parsed.isRepeat),
+      };
+    }
+  } catch (e) {
+    // Return null on any error
+  }
+  return null;
+}
+
+function savePlayerState(state: PlayerState): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    // Ignore quota/blocked errors
+  }
+}
+
 export default function MusicPlayer() {
   const [trackIndex, setTrackIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -29,13 +73,30 @@ export default function MusicPlayer() {
   const [isRepeat, setIsRepeat] = useState<boolean>(false);
   const [repeatCount, setRepeatCount] = useState<number>(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
+  const [hasHydrated, setHasHydrated] = useState<boolean>(false);
 
   const playerRef = useRef<any>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const trackIndexRef = useRef<number>(0);
+  const trackIndexRef = useRef<number>(trackIndex);
   const isPlayingRef = useRef<boolean>(false);
   const isUserPausedRef = useRef<boolean>(true);
-  const isRepeatRef = useRef<boolean>(false);
+  const isRepeatRef = useRef<boolean>(isRepeat);
+  const volumeRef = useRef<number>(volume);
+  const currentTimeRef = useRef<number>(0);
+
+  // Restore saved state after client hydration completes to avoid SSR mismatch
+  useEffect(() => {
+    const saved = loadPlayerState();
+    if (saved) {
+      setTrackIndex(saved.trackIndex);
+      setVolume(saved.volume);
+      setIsRepeat(saved.isRepeat);
+      trackIndexRef.current = saved.trackIndex;
+      volumeRef.current = saved.volume;
+      isRepeatRef.current = saved.isRepeat;
+    }
+    setHasHydrated(true);
+  }, []);
 
   useEffect(() => {
     trackIndexRef.current = trackIndex;
@@ -49,6 +110,14 @@ export default function MusicPlayer() {
     isRepeatRef.current = isRepeat;
   }, [isRepeat]);
 
+  useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    currentTimeRef.current = currentTime;
+  }, [currentTime]);
+
   const currentTrack = TRACKS[trackIndex];
 
   // Helper to start timer tracking time
@@ -61,6 +130,12 @@ export default function MusicPlayer() {
           const dur = playerRef.current.getDuration() || 0;
           setCurrentTime(cur);
           setDuration(dur);
+          savePlayerState({
+            trackIndex: trackIndexRef.current,
+            currentTime: cur,
+            volume: volumeRef.current,
+            isRepeat: isRepeatRef.current,
+          });
         } catch (e) { }
       }
     }, 500);
@@ -113,11 +188,43 @@ export default function MusicPlayer() {
     };
   }, []);
 
+  // Save state on pagehide (tab close / unload)
+  useEffect(() => {
+    const handlePageHide = () => {
+      let liveTime = currentTimeRef.current;
+      if (playerRef.current && typeof playerRef.current.getCurrentTime === "function") {
+        try {
+          const t = playerRef.current.getCurrentTime();
+          if (typeof t === "number" && !isNaN(t)) {
+            liveTime = t;
+          }
+        } catch (e) { }
+      }
+      savePlayerState({
+        trackIndex: trackIndexRef.current,
+        currentTime: liveTime,
+        volume: volumeRef.current,
+        isRepeat: isRepeatRef.current,
+      });
+    };
+
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, []);
+
   const handleNextTrack = useCallback(() => {
     // If repeat is on, replay the same track
     if (isRepeatRef.current) {
       setRepeatCount((prev) => prev + 1);
       setCurrentTime(0);
+      savePlayerState({
+        trackIndex: trackIndexRef.current,
+        currentTime: 0,
+        volume: volumeRef.current,
+        isRepeat: isRepeatRef.current,
+      });
       isUserPausedRef.current = false;
       if (playerRef.current && typeof playerRef.current.seekTo === "function") {
         playerRef.current.seekTo(0, true);
@@ -129,6 +236,12 @@ export default function MusicPlayer() {
 
     const nextIdx = (trackIndexRef.current + 1) % TRACKS.length;
     setTrackIndex(nextIdx);
+    savePlayerState({
+      trackIndex: nextIdx,
+      currentTime: 0,
+      volume: volumeRef.current,
+      isRepeat: isRepeatRef.current,
+    });
     setCurrentTime(0);
     setDuration(0);
     setRepeatCount(0);
@@ -141,6 +254,8 @@ export default function MusicPlayer() {
 
   // Initialize YouTube API and Player
   useEffect(() => {
+    if (!hasHydrated) return;
+
     const initPlayer = () => {
       if (playerRef.current) return;
       if (!window.YT || !window.YT.Player) return;
@@ -148,7 +263,7 @@ export default function MusicPlayer() {
       playerRef.current = new window.YT.Player("youtube-player-frame", {
         height: "180",
         width: "320",
-        videoId: TRACKS[0].id,
+        videoId: TRACKS[trackIndexRef.current]?.id || TRACKS[0].id,
         playerVars: {
           autoplay: 0,
           controls: 0,
@@ -163,7 +278,12 @@ export default function MusicPlayer() {
           onReady: (event: any) => {
             setIsReady(true);
             try {
-              event.target.setVolume(70);
+              const saved = loadPlayerState();
+              event.target.setVolume(saved?.volume ?? 70);
+              if (saved && typeof saved.currentTime === "number" && saved.currentTime > 0) {
+                event.target.seekTo(saved.currentTime, true);
+                setCurrentTime(saved.currentTime);
+              }
             } catch (err) { }
           },
           onStateChange: (event: any) => {
@@ -218,7 +338,7 @@ export default function MusicPlayer() {
     return () => {
       stopProgressTracking();
     };
-  }, [handleNextTrack]);
+  }, [hasHydrated, handleNextTrack]);
 
   const handlePlayPause = useCallback(() => {
     if (!playerRef.current || !isReady) return;
@@ -234,6 +354,12 @@ export default function MusicPlayer() {
   const handlePrevTrack = useCallback(() => {
     const prevIdx = (trackIndexRef.current - 1 + TRACKS.length) % TRACKS.length;
     setTrackIndex(prevIdx);
+    savePlayerState({
+      trackIndex: prevIdx,
+      currentTime: 0,
+      volume: volumeRef.current,
+      isRepeat: isRepeatRef.current,
+    });
     setCurrentTime(0);
     setDuration(0);
     setRepeatCount(0);
