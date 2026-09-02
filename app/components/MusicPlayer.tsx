@@ -80,6 +80,7 @@ export default function MusicPlayer() {
   const trackIndexRef = useRef<number>(trackIndex);
   const isPlayingRef = useRef<boolean>(false);
   const isUserPausedRef = useRef<boolean>(true);
+  const userHasClickedPlayRef = useRef<boolean>(false);
   const isRepeatRef = useRef<boolean>(isRepeat);
   const volumeRef = useRef<number>(volume);
   const currentTimeRef = useRef<number>(0);
@@ -215,6 +216,7 @@ export default function MusicPlayer() {
   }, []);
 
   const handleNextTrack = useCallback(() => {
+    userHasClickedPlayRef.current = true;
     // If repeat is on, replay the same track
     if (isRepeatRef.current) {
       setRepeatCount((prev) => prev + 1);
@@ -282,6 +284,7 @@ export default function MusicPlayer() {
               event.target.setVolume(saved?.volume ?? 70);
               if (saved && typeof saved.currentTime === "number" && saved.currentTime > 0) {
                 event.target.seekTo(saved.currentTime, true);
+                event.target.pauseVideo();
                 setCurrentTime(saved.currentTime);
               }
             } catch (err) { }
@@ -289,6 +292,11 @@ export default function MusicPlayer() {
           onStateChange: (event: any) => {
             const YTState = window.YT.PlayerState;
             if (event.data === YTState.PLAYING) {
+              if (!userHasClickedPlayRef.current) {
+                event.target.pauseVideo();
+                isUserPausedRef.current = true;
+                return;
+              }
               setIsPlaying(true);
               isUserPausedRef.current = false;
               startProgressTracking();
@@ -346,12 +354,14 @@ export default function MusicPlayer() {
       isUserPausedRef.current = true;
       playerRef.current.pauseVideo();
     } else {
+      userHasClickedPlayRef.current = true;
       isUserPausedRef.current = false;
       playerRef.current.playVideo();
     }
   }, [isReady]);
 
   const handlePrevTrack = useCallback(() => {
+    userHasClickedPlayRef.current = true;
     const prevIdx = (trackIndexRef.current - 1 + TRACKS.length) % TRACKS.length;
     setTrackIndex(prevIdx);
     savePlayerState({
@@ -424,6 +434,7 @@ export default function MusicPlayer() {
 
       navigator.mediaSession.setActionHandler("play", () => {
         if (playerRef.current && typeof playerRef.current.playVideo === "function") {
+          userHasClickedPlayRef.current = true;
           isUserPausedRef.current = false;
           playerRef.current.playVideo();
         }
