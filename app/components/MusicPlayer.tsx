@@ -398,9 +398,9 @@ export default function MusicPlayer() {
     }
   };
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     if (!playerRef.current) return;
-    if (isMuted) {
+    if (isMuted || volume === 0) {
       playerRef.current.unMute();
       setIsMuted(false);
       setVolume(playerRef.current.getVolume() || 70);
@@ -408,7 +408,7 @@ export default function MusicPlayer() {
       playerRef.current.mute();
       setIsMuted(true);
     }
-  };
+  }, [isMuted, volume]);
 
   const toggleRepeat = () => {
     setIsRepeat((prev) => {
@@ -439,7 +439,7 @@ export default function MusicPlayer() {
           playerRef.current.playVideo();
         }
       });
-      
+
       navigator.mediaSession.setActionHandler("pause", () => {
         if (playerRef.current && typeof playerRef.current.pauseVideo === "function") {
           isUserPausedRef.current = true;
@@ -483,12 +483,18 @@ export default function MusicPlayer() {
       } else if (e.code === "ArrowLeft") {
         e.preventDefault();
         handlePrevTrack();
+      } else if (e.code === "KeyR") {
+        e.preventDefault();
+        toggleRepeat();
+      } else if (e.code === "KeyM") {
+        e.preventDefault();
+        toggleMute();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePlayPause, handleNextTrack, handlePrevTrack]);
+  }, [handlePlayPause, handleNextTrack, handlePrevTrack, toggleMute]);
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -499,11 +505,10 @@ export default function MusicPlayer() {
         When showVideo is false, we keep it in DOM with subtle opacity to prevent Chromium from throttling background tab audio.
       */}
       <div
-        className={`fixed z-40 transition-all duration-300 ${
-          showVideo
+        className={`fixed z-40 transition-all duration-300 ${showVideo
             ? "bottom-6 right-6 w-70 h-39.5 opacity-100 scale-100"
             : "bottom-2 right-2 w-70 h-39.5 opacity-[0.01] pointer-events-none -z-10"
-        }`}
+          }`}
       >
         <div className="relative w-full h-full rounded-lg overflow-hidden border border-zinc-800 shadow-2xl bg-black group">
           <div id="youtube-player-frame" className="w-full h-full object-cover" />
@@ -519,19 +524,17 @@ export default function MusicPlayer() {
 
       {/* Single Persistent Morphing Player Card */}
       <div
-        className={`relative z-10 mx-auto select-none font-mono text-white backdrop-blur-xl border border-white/10 shadow-[0_16px_50px_rgba(0,0,0,0.85)] bg-[#0a0a0a]/95 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${
-          isMinimized
+        className={`relative z-10 mx-auto select-none font-mono text-white backdrop-blur-xl border border-white/10 shadow-[0_16px_50px_rgba(0,0,0,0.85)] bg-[#0a0a0a]/95 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${isMinimized
             ? "w-auto max-w-105 rounded-[20px]"
             : "w-full max-w-155 rounded-2xl"
-        }`}
+          }`}
       >
         {/* Minimized Content Layer */}
         <div
-          className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-3 px-3.5 ${
-            isMinimized
+          className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex items-center gap-3 px-3.5 ${isMinimized
               ? "max-h-12 py-1.5 opacity-100 scale-100 pointer-events-auto"
               : "max-h-0 py-0 opacity-0 scale-95 pointer-events-none overflow-hidden"
-          }`}
+            }`}
         >
           {/* Micro Vinyl Disc */}
           <div className="relative w-6 h-6 rounded-full overflow-hidden border border-white/20 bg-black shrink-0 flex items-center justify-center">
@@ -549,9 +552,8 @@ export default function MusicPlayer() {
           {/* Track Info */}
           <div className="flex items-center gap-2 min-w-0 max-w-45 sm:max-w-65">
             <span
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                isPlaying ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"
-              }`}
+              className={`w-1.5 h-1.5 rounded-full shrink-0 ${isPlaying ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"
+                }`}
             />
             <span className="text-xs text-white font-medium truncate">{currentTrack.title}</span>
             <span className="text-[10px] text-zinc-500 truncate hidden sm:inline">· {currentTrack.artist}</span>
@@ -588,19 +590,17 @@ export default function MusicPlayer() {
 
         {/* Expanded Content Layer */}
         <div
-          className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            !isMinimized
+          className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${!isMinimized
               ? "max-h-105 opacity-100 scale-100 pointer-events-auto"
               : "max-h-0 opacity-0 scale-95 pointer-events-none overflow-hidden"
-          }`}
+            }`}
         >
           {/* Top Header Bar */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 text-[10px] text-zinc-500 tracking-widest uppercase">
             <div className="flex items-center gap-2">
               <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  isPlaying ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"
-                }`}
+                className={`w-1.5 h-1.5 rounded-full ${isPlaying ? "bg-emerald-400 animate-pulse" : "bg-zinc-600"
+                  }`}
               />
               <span className="text-zinc-400">01 / AUDIO STREAM</span>
             </div>
@@ -625,7 +625,7 @@ export default function MusicPlayer() {
 
           {/* Middle Main Content Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] divide-y sm:divide-y-0 sm:divide-x divide-white/10">
-            
+
             {/* Left Grid: Framed Vinyl Disc */}
             <div
               onClick={() => setShowVideo(!showVideo)}
@@ -643,19 +643,18 @@ export default function MusicPlayer() {
                 <img
                   src={`https://img.youtube.com/vi/${currentTrack.id}/hqdefault.jpg`}
                   alt={currentTrack.title}
-                  className={`w-full h-full object-cover transition-transform ${
-                    isPlaying ? "animate-spin [animation-duration:9s]" : ""
-                  }`}
+                  className={`w-full h-full object-cover transition-transform ${isPlaying ? "animate-spin [animation-duration:9s]" : ""
+                    }`}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${currentTrack.id}/mqdefault.jpg`;
                   }}
                 />
-                
+
                 {/* Concentric Vinyl Grooves (Monochrome Portfolio Style) */}
                 <div className="absolute inset-0 rounded-full border-[5px] border-black/50 pointer-events-none" />
                 <div className="absolute inset-1.5 rounded-full border border-white/10 pointer-events-none" />
                 <div className="absolute inset-3.5 rounded-full border border-white/10 pointer-events-none" />
-                
+
                 {/* Center Spindle Hole */}
                 <div className="absolute inset-0 m-auto w-6 h-6 rounded-full bg-zinc-900 border border-white/30 flex items-center justify-center shadow-inner pointer-events-none">
                   <div className="w-2 h-2 rounded-full bg-black border border-white/40" />
@@ -674,7 +673,7 @@ export default function MusicPlayer() {
 
             {/* Right Grid: Track Meta, Scrubber & Controls */}
             <div className="p-3.5 sm:p-4 flex flex-col justify-between gap-3">
-              
+
               {/* Track Info */}
               <div className="flex flex-col min-w-0">
                 <div className="flex items-baseline justify-between gap-2">
@@ -720,7 +719,7 @@ export default function MusicPlayer() {
 
               {/* Controls Bar */}
               <div className="flex items-center justify-between pt-1 gap-2">
-                
+
                 {/* Transport Buttons */}
                 <div className="flex items-center gap-1.5">
                   <button
@@ -754,11 +753,10 @@ export default function MusicPlayer() {
                   <button
                     onClick={toggleRepeat}
                     aria-label={isRepeat ? "Disable Repeat" : "Enable Repeat"}
-                    className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] tracking-wider uppercase transition-all active:scale-95 cursor-pointer ${
-                      isRepeat
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded border text-[10px] tracking-wider uppercase transition-all active:scale-95 cursor-pointer ${isRepeat
                         ? "bg-zinc-800 border-white/30 text-white font-medium shadow-sm"
                         : "bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                    }`}
+                      }`}
                     title={isRepeat ? `Repeat ON (${repeatCount} loops)` : "Enable Repeat"}
                   >
                     <svg
