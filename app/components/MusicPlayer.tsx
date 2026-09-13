@@ -66,12 +66,12 @@ type PlaylistMode = "default" | "custom";
 
 interface MusicPlayerProps {
   playlistMode: PlaylistMode;
+  customTracks: Track[];
   onSwitchMode: (mode: PlaylistMode) => void;
   onOpenPanel: () => void;
 }
 
-export default function MusicPlayer({ playlistMode, onSwitchMode, onOpenPanel }: MusicPlayerProps) {
-  const [customTracks, setCustomTracks] = useState<Track[]>([]);
+export default function MusicPlayer({ playlistMode, customTracks, onSwitchMode, onOpenPanel }: MusicPlayerProps) {
 
   const [trackIndex, setTrackIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -485,14 +485,9 @@ export default function MusicPlayer({ playlistMode, onSwitchMode, onOpenPanel }:
     }
   }, [isPlaying]);
 
-  // Switch playlist mode: load custom tracks from storage, reset to track 0
+  // Switch playlist mode — reset player state, pause audio
   const handleSwitchMode = useCallback((mode: PlaylistMode) => {
-    if (mode === "custom") {
-      const stored = loadCustomTracks();
-      setCustomTracks(stored);
-      // Auto-open manage panel if no tracks yet
-      if (stored.length === 0) onOpenPanel();
-    }
+    if (mode === "custom" && customTracks.length === 0) onOpenPanel();
     onSwitchMode(mode);
     setTrackIndex(0);
     trackIndexRef.current = 0;
@@ -504,7 +499,35 @@ export default function MusicPlayer({ playlistMode, onSwitchMode, onOpenPanel }:
       try { playerRef.current.pauseVideo(); } catch { }
     }
     setIsPlaying(false);
-  }, [onSwitchMode, onOpenPanel]);
+  }, [onSwitchMode, onOpenPanel, customTracks.length]);
+
+  // When customTracks changes while in custom mode, load the right video
+  useEffect(() => {
+    if (playlistMode !== "custom" || !playerRef.current || !isReady) return;
+    if (customTracks.length === 0) {
+      // No tracks — pause and reset
+      try { playerRef.current.pauseVideo(); } catch { }
+      setIsPlaying(false);
+      isUserPausedRef.current = true;
+      setCurrentTime(0);
+      setDuration(0);
+      return;
+    }
+    // Clamp index to valid range
+    const idx = Math.min(trackIndexRef.current, customTracks.length - 1);
+    if (idx !== trackIndexRef.current) {
+      setTrackIndex(0);
+      trackIndexRef.current = 0;
+    }
+    // Cue the track without auto-playing
+    try {
+      playerRef.current.cueVideoById(customTracks[idx].id);
+    } catch { }
+    setIsPlaying(false);
+    isUserPausedRef.current = true;
+    setCurrentTime(0);
+    setDuration(0);
+  }, [customTracks, playlistMode, isReady]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -667,6 +690,18 @@ export default function MusicPlayer({ playlistMode, onSwitchMode, onOpenPanel }:
           </div>
 
           {/* Middle Main Content Grid */}
+          {playlistMode === "custom" && customTracks.length === 0 ? (
+            // Empty state when in custom mode with no tracks added yet
+            <div className="flex flex-col items-center justify-center gap-2 py-8 px-4 text-center">
+              <span className="text-zinc-700 text-2xl">♪</span>
+              <span className="text-zinc-500 text-[11px] font-mono tracking-wide">
+                No custom tracks yet.
+              </span>
+              <span className="text-zinc-700 text-[10px] font-mono">
+                Click <span className="text-zinc-500">manage ✎</span> in the top bar to add songs.
+              </span>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-[130px_1fr] divide-y sm:divide-y-0 sm:divide-x divide-white/10">
 
             {/* Left Grid: Framed Vinyl Disc */}
@@ -852,6 +887,7 @@ export default function MusicPlayer({ playlistMode, onSwitchMode, onOpenPanel }:
               </div>
             </div>
           </div>
+          )} {/* end empty-state ternary */}
 
           {/* Bottom Bar: YouTube Link & Loop Status */}
           <div className="px-4 py-1.5 border-t border-white/10 text-[10px] text-zinc-500 flex items-center justify-between">

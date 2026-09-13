@@ -218,6 +218,7 @@ export default function Home() {
       <footer className="absolute bottom-6 left-0 right-0 flex justify-center px-4 z-20">
         <MusicPlayer
           playlistMode={playlistMode}
+          customTracks={customTracks}
           onSwitchMode={handleSwitchMode}
           onOpenPanel={handleOpenPanel}
         />
