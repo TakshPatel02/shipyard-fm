@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Clock from "./components/Clock";
 import MusicPlayer from "./components/MusicPlayer";
@@ -18,6 +18,12 @@ export default function Home() {
   const [current, setCurrent] = useState<number>(() =>
     indexForHour(getISTNow().getHours())
   );
+
+  const [playlistMode, setPlaylistMode] = useState<"default" | "custom">("default");
+
+  const handleSwitchMode = useCallback((mode: "default" | "custom") => {
+    setPlaylistMode(mode);
+  }, []);
 
   const slotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -84,7 +90,7 @@ export default function Home() {
       </div>
 
       {/* Subtle Vignette Overlay for Readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none z-10" />
+      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/60 pointer-events-none z-10" />
 
       {/* Hero Center Title: THE SHIPYARD */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4 z-15 -translate-y-10 sm:-translate-y-14">
@@ -133,29 +139,39 @@ export default function Home() {
             </span>
           </button>
 
-          {/* YouTube Playlist Link */}
-          <a
-            href={YOUTUBE_PLAYLIST_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono text-xs text-white/90 shadow-md hover:bg-black/75 hover:border-white/25 transition-all group whitespace-nowrap shrink-0"
-            aria-label="Open YouTube Playlist"
-          >
-            <span className="text-white/40 font-mono text-[10px] tracking-wider shrink-0">SOURCE</span>
+          {/* Playlist Mode Toggle */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono shadow-md whitespace-nowrap shrink-0">
+            <span className="text-white/40 text-[10px] tracking-wider shrink-0">PLAYLIST</span>
             <span className="w-px h-3 bg-white/15 shrink-0" />
-            <span className="text-white/90 font-mono tracking-tight group-hover:text-white whitespace-nowrap">
-              youtube playlist
-            </span>
-            <span className="text-white/50 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform shrink-0">
-              ↗
-            </span>
-          </a>
+            <button
+              onClick={() => handleSwitchMode("default")}
+              className={`text-[11px] tracking-tight transition-all cursor-pointer pb-px ${
+                playlistMode === "default"
+                  ? "text-white font-semibold border-b border-white"
+                  : "text-white/30 hover:text-white/60 border-b border-transparent"
+              }`}
+              title="Use Shipyard default playlist"
+            >
+              default
+            </button>
+            <button
+              onClick={() => handleSwitchMode("custom")}
+              className={`text-[11px] tracking-tight transition-all cursor-pointer pb-px ${
+                playlistMode === "custom"
+                  ? "text-white font-semibold border-b border-white"
+                  : "text-white/30 hover:text-white/60 border-b border-transparent"
+              }`}
+              title="Use your own custom playlist"
+            >
+              custom
+            </button>
+          </div>
         </nav>
       </header>
 
       {/* Bottom Center: Music Player Container */}
       <footer className="absolute bottom-6 left-0 right-0 flex justify-center px-4 z-20">
-        <MusicPlayer />
+        <MusicPlayer playlistMode={playlistMode} onSwitchMode={handleSwitchMode} />
       </footer>
     </main>
   );

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { TRACKS } from "../lib/music-data";
+import { TRACKS, Track } from "../lib/music-data";
+import { loadCustomTracks } from "../lib/custom-playlist";
 
 declare global {
   interface Window {
@@ -61,7 +62,15 @@ function savePlayerState(state: PlayerState): void {
   }
 }
 
-export default function MusicPlayer() {
+type PlaylistMode = "default" | "custom";
+
+interface MusicPlayerProps {
+  playlistMode: PlaylistMode;
+  onSwitchMode: (mode: PlaylistMode) => void;
+}
+
+export default function MusicPlayer({ playlistMode, onSwitchMode }: MusicPlayerProps) {
+  const [customTracks, setCustomTracks] = useState<Track[]>([]);
   const [trackIndex, setTrackIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -84,6 +93,8 @@ export default function MusicPlayer() {
   const isRepeatRef = useRef<boolean>(isRepeat);
   const volumeRef = useRef<number>(volume);
   const currentTimeRef = useRef<number>(0);
+  // Ref so player callbacks always see the latest track list without stale closure
+  const activeTracksRef = useRef<Track[]>(TRACKS);
 
   // Restore saved state after client hydration completes to avoid SSR mismatch
   useEffect(() => {
@@ -119,7 +130,11 @@ export default function MusicPlayer() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  const currentTrack = TRACKS[trackIndex];
+  // Derive the active track list from mode; keep ref in sync for callbacks
+  const activeTracks = playlistMode === "default" ? TRACKS : customTracks;
+  activeTracksRef.current = activeTracks;
+
+  const currentTrack = activeTracks[trackIndex] ?? activeTracks[0] ?? TRACKS[0];
 
   // Helper to start timer tracking time
   const startProgressTracking = () => {
@@ -217,6 +232,8 @@ export default function MusicPlayer() {
 
   const handleNextTrack = useCallback(() => {
     userHasClickedPlayRef.current = true;
+    const tracks = activeTracksRef.current;
+    if (!tracks.length) return;
     // If repeat is on, replay the same track
     if (isRepeatRef.current) {
       setRepeatCount((prev) => prev + 1);
@@ -236,7 +253,7 @@ export default function MusicPlayer() {
       return;
     }
 
-    const nextIdx = (trackIndexRef.current + 1) % TRACKS.length;
+    const nextIdx = (trackIndexRef.current + 1) % tracks.length;
     setTrackIndex(nextIdx);
     savePlayerState({
       trackIndex: nextIdx,
@@ -249,7 +266,7 @@ export default function MusicPlayer() {
     setRepeatCount(0);
     isUserPausedRef.current = false;
     if (playerRef.current && typeof playerRef.current.loadVideoById === "function") {
-      playerRef.current.loadVideoById(TRACKS[nextIdx].id);
+      playerRef.current.loadVideoById(tracks[nextIdx].id);
       setIsPlaying(true);
     }
   }, []);
@@ -262,10 +279,11 @@ export default function MusicPlayer() {
       if (playerRef.current) return;
       if (!window.YT || !window.YT.Player) return;
 
+      const tracks = activeTracksRef.current;
       playerRef.current = new window.YT.Player("youtube-player-frame", {
         height: "180",
         width: "320",
-        videoId: TRACKS[trackIndexRef.current]?.id || TRACKS[0].id,
+        videoId: tracks[trackIndexRef.current]?.id || tracks[0]?.id || TRACKS[0].id,
         playerVars: {
           autoplay: 0,
           controls: 0,
@@ -362,7 +380,9 @@ export default function MusicPlayer() {
 
   const handlePrevTrack = useCallback(() => {
     userHasClickedPlayRef.current = true;
-    const prevIdx = (trackIndexRef.current - 1 + TRACKS.length) % TRACKS.length;
+    const tracks = activeTracksRef.current;
+    if (!tracks.length) return;
+    const prevIdx = (trackIndexRef.current - 1 + tracks.length) % tracks.length;
     setTrackIndex(prevIdx);
     savePlayerState({
       trackIndex: prevIdx,
@@ -375,7 +395,7 @@ export default function MusicPlayer() {
     setRepeatCount(0);
     isUserPausedRef.current = false;
     if (playerRef.current && typeof playerRef.current.loadVideoById === "function") {
-      playerRef.current.loadVideoById(TRACKS[prevIdx].id);
+      playerRef.current.loadVideoById(tracks[prevIdx].id);
       setIsPlaying(true);
     }
   }, []);
@@ -462,6 +482,25 @@ export default function MusicPlayer() {
       navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
     }
   }, [isPlaying]);
+
+  // Switch playlist mode: load custom tracks from storage, reset to track 0
+  const handleSwitchMode = useCallback((mode: PlaylistMode) => {
+    if (mode === "custom") {
+      const stored = loadCustomTracks();
+      setCustomTracks(stored);
+    }
+    onSwitchMode(mode);
+    setTrackIndex(0);
+    trackIndexRef.current = 0;
+    setCurrentTime(0);
+    setDuration(0);
+    setRepeatCount(0);
+    isUserPausedRef.current = true;
+    if (playerRef.current && typeof playerRef.current.pauseVideo === "function") {
+      try { playerRef.current.pauseVideo(); } catch { }
+    }
+    setIsPlaying(false);
+  }, [onSwitchMode]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -606,7 +645,7 @@ export default function MusicPlayer() {
             </div>
             <div className="flex items-center gap-3">
               <span className="tabular-nums text-zinc-400">
-                {String(trackIndex + 1).padStart(2, "0")} / {String(TRACKS.length).padStart(2, "0")}
+                {String(trackIndex + 1).padStart(2, "0")} / {String(activeTracks.length).padStart(2, "0")}
               </span>
               <span className="w-px h-3 bg-white/10" />
               <span>FIG. 82</span>
@@ -810,13 +849,11 @@ export default function MusicPlayer() {
             </div>
           </div>
 
-          {/* Bottom Bar: Source & Personal Loop Status */}
+          {/* Bottom Bar: YouTube Link & Loop Status */}
           <div className="px-4 py-1.5 border-t border-white/10 text-[10px] text-zinc-500 flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] tracking-widest uppercase text-zinc-600">SOURCE:</span>
-              <span className="text-zinc-400">YouTube</span>
+            <div className="text-[9px] tracking-widest uppercase text-zinc-600 group-hover:text-zinc-400 transition-colors">
+              SOURCE: YOUTUBE
             </div>
-
             <div className="flex items-center gap-1.5">
               {isRepeat ? (
                 <span className="text-zinc-300">
