@@ -4,6 +4,9 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import Clock from "./components/Clock";
 import MusicPlayer from "./components/MusicPlayer";
+import CustomPlaylistPanel from "./components/CustomPlaylistPanel";
+import { loadCustomTracks, saveCustomTracks } from "./lib/custom-playlist";
+import { Track } from "./lib/music-data";
 import {
   BANNERS,
   getISTNow,
@@ -20,9 +23,22 @@ export default function Home() {
   );
 
   const [playlistMode, setPlaylistMode] = useState<"default" | "custom">("default");
+  const [showPlaylistPanel, setShowPlaylistPanel] = useState<boolean>(false);
+  const [customTracks, setCustomTracks] = useState<Track[]>([]);
 
   const handleSwitchMode = useCallback((mode: "default" | "custom") => {
+    if (mode === "custom" && playlistMode !== "custom") {
+      const stored = loadCustomTracks();
+      setCustomTracks(stored);
+    }
     setPlaylistMode(mode);
+    if (mode === "default") setShowPlaylistPanel(false);
+  }, [playlistMode]);
+
+  const handleOpenPanel = useCallback(() => {
+    const stored = loadCustomTracks();
+    setCustomTracks(stored);
+    setShowPlaylistPanel(true);
   }, []);
 
   const slotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -139,7 +155,7 @@ export default function Home() {
             </span>
           </button>
 
-          {/* Playlist Mode Toggle */}
+          {/* Playlist Mode Toggle + Manage */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono shadow-md whitespace-nowrap shrink-0">
             <span className="text-white/40 text-[10px] tracking-wider shrink-0">PLAYLIST</span>
             <span className="w-px h-3 bg-white/15 shrink-0" />
@@ -165,13 +181,46 @@ export default function Home() {
             >
               custom
             </button>
+            {/* Manage button — only visible in custom mode */}
+            {playlistMode === "custom" && (
+              <>
+                <span className="w-px h-3 bg-white/15 shrink-0" />
+                <button
+                  onClick={() => setShowPlaylistPanel((v) => !v)}
+                  className={`text-[10px] tracking-wider transition-all cursor-pointer ${
+                    showPlaylistPanel
+                      ? "text-white"
+                      : "text-white/40 hover:text-white/80"
+                  }`}
+                  title="Manage custom playlist"
+                >
+                  {showPlaylistPanel ? "close ✕" : "manage ✎"}
+                </button>
+              </>
+            )}
           </div>
         </nav>
       </header>
 
+      {/* Custom Playlist Panel — centered on screen, above the player */}
+      {playlistMode === "custom" && showPlaylistPanel && (
+        <CustomPlaylistPanel
+          tracks={customTracks}
+          onTracksChange={(updated) => {
+            setCustomTracks(updated);
+            saveCustomTracks(updated);
+          }}
+          onClose={() => setShowPlaylistPanel(false)}
+        />
+      )}
+
       {/* Bottom Center: Music Player Container */}
       <footer className="absolute bottom-6 left-0 right-0 flex justify-center px-4 z-20">
-        <MusicPlayer playlistMode={playlistMode} onSwitchMode={handleSwitchMode} />
+        <MusicPlayer
+          playlistMode={playlistMode}
+          onSwitchMode={handleSwitchMode}
+          onOpenPanel={handleOpenPanel}
+        />
       </footer>
     </main>
   );

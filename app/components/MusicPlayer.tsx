@@ -67,10 +67,12 @@ type PlaylistMode = "default" | "custom";
 interface MusicPlayerProps {
   playlistMode: PlaylistMode;
   onSwitchMode: (mode: PlaylistMode) => void;
+  onOpenPanel: () => void;
 }
 
-export default function MusicPlayer({ playlistMode, onSwitchMode }: MusicPlayerProps) {
+export default function MusicPlayer({ playlistMode, onSwitchMode, onOpenPanel }: MusicPlayerProps) {
   const [customTracks, setCustomTracks] = useState<Track[]>([]);
+
   const [trackIndex, setTrackIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -488,6 +490,8 @@ export default function MusicPlayer({ playlistMode, onSwitchMode }: MusicPlayerP
     if (mode === "custom") {
       const stored = loadCustomTracks();
       setCustomTracks(stored);
+      // Auto-open manage panel if no tracks yet
+      if (stored.length === 0) onOpenPanel();
     }
     onSwitchMode(mode);
     setTrackIndex(0);
@@ -500,7 +504,7 @@ export default function MusicPlayer({ playlistMode, onSwitchMode }: MusicPlayerP
       try { playerRef.current.pauseVideo(); } catch { }
     }
     setIsPlaying(false);
-  }, [onSwitchMode]);
+  }, [onSwitchMode, onOpenPanel]);
 
   // Keyboard shortcuts
   useEffect(() => {
