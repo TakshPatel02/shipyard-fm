@@ -67,11 +67,10 @@ type PlaylistMode = "default" | "custom";
 interface MusicPlayerProps {
   playlistMode: PlaylistMode;
   customTracks: Track[];
-  onSwitchMode: (mode: PlaylistMode) => void;
   onOpenPanel: () => void;
 }
 
-export default function MusicPlayer({ playlistMode, customTracks, onSwitchMode, onOpenPanel }: MusicPlayerProps) {
+export default function MusicPlayer({ playlistMode, customTracks, onOpenPanel }: MusicPlayerProps) {
 
   const [trackIndex, setTrackIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -485,21 +484,30 @@ export default function MusicPlayer({ playlistMode, customTracks, onSwitchMode, 
     }
   }, [isPlaying]);
 
-  // Switch playlist mode — reset player state, pause audio
-  const handleSwitchMode = useCallback((mode: PlaylistMode) => {
-    if (mode === "custom" && customTracks.length === 0) onOpenPanel();
-    onSwitchMode(mode);
+  // Handle playlist mode changes (e.g. from top bar)
+  useEffect(() => {
+    if (!playerRef.current || !isReady) return;
+    
+    // Stop playback immediately on mode switch
+    try { playerRef.current.pauseVideo(); } catch { }
+    setIsPlaying(false);
+    isUserPausedRef.current = true;
     setTrackIndex(0);
     trackIndexRef.current = 0;
     setCurrentTime(0);
     setDuration(0);
     setRepeatCount(0);
-    isUserPausedRef.current = true;
-    if (playerRef.current && typeof playerRef.current.pauseVideo === "function") {
-      try { playerRef.current.pauseVideo(); } catch { }
+
+    if (playlistMode === "custom") {
+      if (customTracks.length === 0) {
+        // Handled by the other effect / panel auto-open
+        return;
+      }
+      try { playerRef.current.cueVideoById(customTracks[0].id); } catch { }
+    } else {
+      try { playerRef.current.cueVideoById(TRACKS[0].id); } catch { }
     }
-    setIsPlaying(false);
-  }, [onSwitchMode, onOpenPanel, customTracks.length]);
+  }, [playlistMode, isReady]);
 
   // When customTracks changes while in custom mode, load the right video
   useEffect(() => {

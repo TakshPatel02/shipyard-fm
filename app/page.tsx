@@ -219,7 +219,6 @@ export default function Home() {
         <MusicPlayer
           playlistMode={playlistMode}
           customTracks={customTracks}
-          onSwitchMode={handleSwitchMode}
           onOpenPanel={handleOpenPanel}
         />
       </footer>
