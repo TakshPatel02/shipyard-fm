@@ -40,15 +40,15 @@ export default function CustomPlaylistPanel({ tracks, onTracksChange, onClose }:
   };
 
   return (
-    // Centered on screen with a subtle backdrop
-    <div className="fixed inset-0 z-30 flex items-center justify-center px-4 pb-32 pointer-events-none">
-      <div className="w-full max-w-2xl font-mono text-white backdrop-blur-xl border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.9)] bg-[#0a0a0a]/96 rounded-2xl overflow-hidden pointer-events-auto">
+    // Positioned 10% from top, 5% from right
+    <div className="fixed z-30 top-[10%] right-[5%] w-[80vw] max-w-4xl pointer-events-none">
+      <div className="w-full font-mono text-white backdrop-blur-xl border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.9)] bg-[#0a0a0a]/96 rounded-2xl overflow-hidden pointer-events-auto">
 
         {/* Panel Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 text-[10px] tracking-widest uppercase">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-            <span className="text-zinc-400">CUSTOM PLAYLIST</span>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 text-xs tracking-widest uppercase">
+          <div className="flex items-center gap-3">
+            <span className="w-2 h-2 rounded-full bg-zinc-600" />
+            <span className="text-zinc-400 font-semibold">CUSTOM PLAYLIST</span>
             {tracks.length > 0 && (
               <span className="text-zinc-600">
                 · {String(tracks.length).padStart(2, "0")} TRACKS
@@ -57,7 +57,7 @@ export default function CustomPlaylistPanel({ tracks, onTracksChange, onClose }:
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-600 hover:text-white transition-colors cursor-pointer text-xs px-1"
+            className="text-zinc-500 hover:text-white transition-colors cursor-pointer text-sm px-2 py-1 rounded-md hover:bg-white/10"
             title="Close"
           >
             ✕
@@ -65,20 +65,20 @@ export default function CustomPlaylistPanel({ tracks, onTracksChange, onClose }:
         </div>
 
         {/* Two-column body: Add Form | Track List */}
-        <div className="grid grid-cols-1 sm:grid-cols-[240px_1fr] divide-y sm:divide-y-0 sm:divide-x divide-white/10">
+        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] divide-y md:divide-y-0 md:divide-x divide-white/10 min-h-100">
 
           {/* Left: Add Track Form */}
-          <div className="p-4 flex flex-col gap-3">
-            <span className="text-[9px] tracking-widest uppercase text-zinc-600">ADD TRACK //</span>
+          <div className="p-6 flex flex-col gap-4">
+            <span className="text-[10px] tracking-widest uppercase text-zinc-500 font-semibold">ADD TRACK //</span>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <input
                 type="text"
                 placeholder="YouTube URL"
                 value={url}
                 onChange={(e) => { setUrl(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                className="w-full bg-zinc-900 border border-white/10 rounded px-2.5 py-1.5 text-[11px] text-white placeholder-zinc-600 focus:outline-none focus:border-white/25 transition-colors"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 focus:bg-zinc-800 transition-all"
               />
               <input
                 type="text"
@@ -86,7 +86,7 @@ export default function CustomPlaylistPanel({ tracks, onTracksChange, onClose }:
                 value={title}
                 onChange={(e) => { setTitle(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                className="w-full bg-zinc-900 border border-white/10 rounded px-2.5 py-1.5 text-[11px] text-white placeholder-zinc-600 focus:outline-none focus:border-white/25 transition-colors"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 focus:bg-zinc-800 transition-all"
               />
               <input
                 type="text"
@@ -94,33 +94,33 @@ export default function CustomPlaylistPanel({ tracks, onTracksChange, onClose }:
                 value={artist}
                 onChange={(e) => setArtist(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-                className="w-full bg-zinc-900 border border-white/10 rounded px-2.5 py-1.5 text-[11px] text-white placeholder-zinc-600 focus:outline-none focus:border-white/25 transition-colors"
+                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-white/30 focus:bg-zinc-800 transition-all"
               />
             </div>
 
             {error && (
-              <span className="text-red-400 text-[10px] leading-relaxed">{error}</span>
+              <span className="text-red-400 text-xs leading-relaxed mt-1">{error}</span>
             )}
 
             <button
               onClick={handleAdd}
-              className="px-3 py-1.5 rounded bg-white text-black text-[10px] tracking-wider uppercase font-semibold hover:bg-zinc-200 active:scale-95 transition-all cursor-pointer"
+              className="mt-auto px-4 py-3 rounded-lg bg-white text-black text-xs tracking-widest uppercase font-bold hover:bg-zinc-200 active:scale-95 transition-all cursor-pointer shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
             >
               add track
             </button>
           </div>
 
           {/* Right: Playlist */}
-          <div className="flex flex-col min-h-0">
-            <div className="px-4 py-2 border-b border-white/10 text-[9px] tracking-widest uppercase text-zinc-600 shrink-0">
+          <div className="flex flex-col min-h-0 bg-black/20">
+            <div className="px-6 py-4 border-b border-white/10 text-[10px] tracking-widest uppercase text-zinc-500 font-semibold shrink-0">
               PLAYLIST //
             </div>
 
-            <div className="overflow-y-auto max-h-64">
+            <div className="overflow-y-auto flex-1">
               {tracks.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-8 px-4">
-                  <span className="text-zinc-700 text-xl">♪</span>
-                  <span className="text-zinc-600 text-[11px] text-center leading-relaxed">
+                <div className="flex flex-col items-center justify-center h-full gap-3 py-12 px-6">
+                  <span className="text-zinc-700 text-3xl">♪</span>
+                  <span className="text-zinc-500 text-sm text-center leading-relaxed">
                     No tracks yet — add one from the left.
                   </span>
                 </div>
@@ -129,22 +129,24 @@ export default function CustomPlaylistPanel({ tracks, onTracksChange, onClose }:
                   {tracks.map((track, idx) => (
                     <li
                       key={`${track.id}-${idx}`}
-                      className="flex items-center justify-between px-4 py-2 group hover:bg-white/2 transition-colors"
+                      className="flex items-center justify-between px-6 py-3.5 group hover:bg-white/4 transition-colors"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-zinc-700 text-[9px] tabular-nums w-4 shrink-0">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <span className="text-zinc-600 text-xs tabular-nums w-5 shrink-0 font-medium">
                           {String(idx + 1).padStart(2, "0")}
                         </span>
-                        <span className="text-zinc-200 text-[11px] truncate">{track.title}</span>
-                        {track.artist && (
-                          <span className="text-zinc-600 text-[10px] truncate hidden sm:inline shrink-0">
-                            · {track.artist}
-                          </span>
-                        )}
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-zinc-100 text-sm truncate font-medium">{track.title}</span>
+                          {track.artist && (
+                            <span className="text-zinc-500 text-xs truncate mt-0.5">
+                              {track.artist}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <button
                         onClick={() => handleRemove(idx)}
-                        className="text-zinc-700 hover:text-red-400 transition-colors text-[10px] ml-3 cursor-pointer shrink-0 opacity-0 group-hover:opacity-100"
+                        className="text-zinc-600 hover:text-red-400 transition-colors text-sm ml-4 cursor-pointer shrink-0 opacity-0 group-hover:opacity-100 p-2 rounded hover:bg-red-400/10"
                         title="Remove track"
                       >
                         ✕
