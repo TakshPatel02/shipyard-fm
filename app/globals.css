@@ -11,6 +11,35 @@ html, body {
   font-family: var(--font-sans);
 }
 
+/* ── Custom sleek scrollbar matching HUD / terminal dark theme ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 146, 60, 0.45); /* warm amber hover */
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* Custom range sliders matching portfolio minimal aesthetics */
 input[type="range"].seek-slider {
   -webkit-appearance: none;
