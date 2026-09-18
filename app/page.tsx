@@ -131,20 +131,21 @@ export default function Home() {
           <Clock />
         </div>
 
-        {/* Top Right: Buttons (Stacks neatly on right on narrow screens) */}
+        {/* Top Right: Control clusters */}
         <nav className="flex flex-col items-end sm:flex-row sm:items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Change Image Button */}
+
+          {/* ── BG Cycle Cluster ── */}
           <button
             onClick={handleCycleImage}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono text-xs text-white/90 shadow-md hover:bg-black/75 hover:border-white/25 transition-all group cursor-pointer whitespace-nowrap shrink-0"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono shadow-md hover:bg-black/70 hover:border-white/20 active:scale-[0.97] transition-all group cursor-pointer whitespace-nowrap shrink-0"
             aria-label="Change Background Image"
           >
-            <span className="text-white/40 font-mono text-[10px] tracking-wider shrink-0">BG // {current + 1}</span>
-            <span className="w-px h-3 bg-white/15 shrink-0" />
-            <span className="text-white/90 font-mono tracking-tight group-hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+            <span className="text-white/35 font-mono text-[10px] tracking-wider shrink-0">BG // {current + 1}</span>
+            <span className="w-px h-3 bg-white/12 shrink-0" />
+            <span className="text-white/75 font-mono text-[11px] tracking-tight group-hover:text-white/95 flex items-center gap-1.5 whitespace-nowrap transition-colors">
               <span>change image</span>
               <svg
-                className="w-3.5 h-3.5 text-white/50 group-hover:text-white transition-transform group-hover:rotate-180 duration-500 shrink-0"
+                className="w-3 h-3 text-white/40 group-hover:text-white/70 transition-transform group-hover:rotate-180 duration-500 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -155,46 +156,54 @@ export default function Home() {
             </span>
           </button>
 
-          {/* Playlist Mode Toggle + Manage */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono shadow-md whitespace-nowrap shrink-0">
-            <span className="text-white/40 text-[10px] tracking-wider shrink-0">PLAYLIST</span>
-            <span className="w-px h-3 bg-white/15 shrink-0" />
-            <button
-              onClick={() => handleSwitchMode("default")}
-              className={`text-[11px] tracking-tight transition-all cursor-pointer pb-px ${
-                playlistMode === "default"
-                  ? "text-white font-semibold border-b border-white"
-                  : "text-white/30 hover:text-white/60 border-b border-transparent"
-              }`}
-              title="Use Shipyard default playlist"
-            >
-              default
-            </button>
-            <button
-              onClick={() => handleSwitchMode("custom")}
-              className={`text-[11px] tracking-tight transition-all cursor-pointer pb-px ${
-                playlistMode === "custom"
-                  ? "text-white font-semibold border-b border-white"
-                  : "text-white/30 hover:text-white/60 border-b border-transparent"
-              }`}
-              title="Use your own custom playlist"
-            >
-              custom
-            </button>
-            {/* Manage button — only visible in custom mode */}
+          {/* ── Playlist Cluster ── */}
+          <div className="flex items-center gap-0 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono shadow-md whitespace-nowrap shrink-0">
+
+            {/* Label */}
+            <span className="text-white/35 text-[10px] tracking-wider shrink-0 pr-2">PLAYLIST</span>
+            <span className="w-px h-3 bg-white/12 shrink-0 mr-2" />
+
+            {/* Segmented pill toggle */}
+            <div className="flex items-center gap-0.5 bg-white/6 rounded-md p-0.5">
+              <button
+                onClick={() => handleSwitchMode("default")}
+                className={`px-2.5 py-0.5 rounded text-[10px] tracking-wide transition-all duration-150 cursor-pointer ${
+                  playlistMode === "default"
+                    ? "bg-white/15 text-white font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+                    : "text-white/35 hover:text-white/65 hover:bg-white/6"
+                }`}
+                title="Use Shipyard default playlist"
+              >
+                default
+              </button>
+              <button
+                onClick={() => handleSwitchMode("custom")}
+                className={`px-2.5 py-0.5 rounded text-[10px] tracking-wide transition-all duration-150 cursor-pointer ${
+                  playlistMode === "custom"
+                    ? "bg-amber-500/20 text-amber-300 font-semibold shadow-[inset_0_0_0_1px_rgba(251,146,60,0.25)]"
+                    : "text-white/35 hover:text-white/65 hover:bg-white/6"
+                }`}
+                title="Use your own custom playlist"
+              >
+                custom
+              </button>
+            </div>
+
+            {/* Manage action — only when custom is active */}
             {playlistMode === "custom" && (
               <>
-                <span className="w-px h-3 bg-white/15 shrink-0" />
+                <span className="w-px h-3 bg-white/12 shrink-0 mx-2" />
                 <button
                   onClick={() => setShowPlaylistPanel((v) => !v)}
-                  className={`text-[10px] tracking-wider transition-all cursor-pointer ${
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] tracking-wide border transition-all duration-150 cursor-pointer ${
                     showPlaylistPanel
-                      ? "text-white"
-                      : "text-white/40 hover:text-white/80"
+                      ? "bg-amber-500/15 border-amber-500/30 text-amber-300"
+                      : "border-white/10 text-white/40 hover:text-white/80 hover:bg-white/[0.07] hover:border-white/20"
                   }`}
                   title="Manage custom playlist"
                 >
-                  {showPlaylistPanel ? "close ✕" : "manage ✎"}
+                  <span>{showPlaylistPanel ? "close" : "manage"}</span>
+                  <span className="text-[9px] opacity-70">{showPlaylistPanel ? "✕" : "✎"}</span>
                 </button>
               </>
             )}
