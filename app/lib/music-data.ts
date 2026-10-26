@@ -5,6 +5,7 @@ export interface Track {
 }
 
 export const TRACKS: Track[] = [
+  { id: "AETFvQonfV8", title: "Hanuman Chalisa", artist: "Gulshan Kumar" },
   { id: "9a4izd3Rvdw", title: "Challa", artist: "Rabbi Shergill" },
   { id: "TyMUY2CDrjc", title: "Haareya", artist: "Arijit Singh" },
   { id: "fdubeMFwuGs", title: "Ilahi", artist: "Arijit Singh" },
