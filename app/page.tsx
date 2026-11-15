@@ -1,236 +1,109 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import Image from "next/image";
-import Clock from "./components/Clock";
-import MusicPlayer from "./components/MusicPlayer";
-import CustomPlaylistPanel from "./components/CustomPlaylistPanel";
-import { loadCustomTracks, saveCustomTracks } from "./lib/custom-playlist";
-import { Track } from "./lib/music-data";
-import {
-  BANNERS,
-  getISTNow,
-  indexForHour,
-  msUntilNextSlot,
-} from "./lib/banner-data";
+import { useEffect, useState } from "react";
+import LightBloom from "./components/LightBloom";
 
-const YOUTUBE_PLAYLIST_URL = "https://youtube.com/playlist?list=PLXR35Mhy4kZA&si=bkv8UyurhfmRPPVc";
+const GITHUB_REPOSITORY = "TakshPatel02/shipyard-fm";
+const GITHUB_URL = `https://github.com/${GITHUB_REPOSITORY}`;
+const PORTFOLIO_URL = "https://takshpatel.vercel.app";
 
 export default function Home() {
-  // Initialise with the correct time-based banner (no flash)
-  const [current, setCurrent] = useState<number>(() =>
-    indexForHour(getISTNow().getHours())
-  );
+  const [stars, setStars] = useState<number | null>(null);
 
-  const [playlistMode, setPlaylistMode] = useState<"default" | "custom">("default");
-  const [showPlaylistPanel, setShowPlaylistPanel] = useState<boolean>(false);
-  const [customTracks, setCustomTracks] = useState<Track[]>([]);
-
-  const handleSwitchMode = useCallback((mode: "default" | "custom") => {
-    if (mode === "custom" && playlistMode !== "custom") {
-      const stored = loadCustomTracks();
-      setCustomTracks(stored);
-    }
-    setPlaylistMode(mode);
-    if (mode === "default") setShowPlaylistPanel(false);
-  }, [playlistMode]);
-
-  const handleOpenPanel = useCallback(() => {
-    const stored = loadCustomTracks();
-    setCustomTracks(stored);
-    setShowPlaylistPanel(true);
-  }, []);
-
-  const slotTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // ── Auto-switch exactly at each slot boundary ──────────────────────
   useEffect(() => {
-    const arm = () => {
-      const istNow = getISTNow();
-      const idx = indexForHour(istNow.getHours());
-      const delay = msUntilNextSlot(idx, istNow);
-
-      slotTimerRef.current = setTimeout(() => {
-        setCurrent(indexForHour(getISTNow().getHours()));
-        arm(); // re-arm for the following slot
-      }, delay);
+    const loadStars = async () => {
+      try {
+        const response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY}`);
+        if (!response.ok) return;
+        const repository = (await response.json()) as { stargazers_count?: number };
+        if (typeof repository.stargazers_count === "number") {
+          setStars(repository.stargazers_count);
+        }
+      } catch {
+        // The link remains useful when the GitHub API is unavailable.
+      }
     };
 
-    arm();
-    return () => {
-      if (slotTimerRef.current) clearTimeout(slotTimerRef.current);
-    };
+    void loadStars();
   }, []);
-
-  // ── Manual "Change Image" click handler ────────────────────────────
-  const handleCycleImage = () => {
-    setCurrent((prev) => (prev + 1) % BANNERS.length);
-  };
 
   return (
-    <main className="relative w-full h-screen overflow-hidden font-sans select-none bg-black">
-      {/* Masked image layer with radial ellipse mask */}
-      <div
-        className="absolute inset-0 overflow-hidden"
-        style={{
-          maskImage: "radial-gradient(ellipse 90% 88% at 50% 50%, black 48%, transparent 100%)",
-          WebkitMaskImage: "radial-gradient(ellipse 90% 88% at 50% 50%, black 48%, transparent 100%)",
-        }}
-      >
-        {BANNERS.map((banner, i) => (
-          <Image
-            key={banner.src}
-            src={banner.src}
-            alt={banner.alt}
-            fill
-            priority={i === 0}
-            sizes="100vw"
-            draggable={false}
-            onDragStart={(e) => e.preventDefault()}
-            className={[
-              "object-cover select-none pointer-events-none",
-              "transition-opacity duration-700 ease-in-out",
-              i === current ? "opacity-100" : "opacity-0",
-            ].join(" ")}
-            loading="eager"
-          />
-        ))}
+    <main className="relative min-h-screen overflow-hidden bg-background text-text">
+      <LightBloom
+        style={{ position: "absolute", inset: 0, minWidth: "100%", minHeight: "100%" }}
+        background="#050509"
+        baseColor="#5B2EE6"
+        accentColor="#8B6CFF"
+        variant="shafts"
+        direction="bottom"
+        light={{ rise: 79, spread: 72 }}
+        shafts={{ count: 17, amount: 70, drift: 79 }}
+        finish={{ grain: 12, vignette: 25 }}
+      />
 
-        {/* Edge overlay for radial dissolve */}
-        <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            background: "radial-gradient(ellipse 90% 88% at 50% 50%, transparent 70%, #000000 100%)",
-          }}
-        />
-      </div>
+      <div className="relative z-10 flex min-h-screen flex-col px-6 py-6 sm:px-10 sm:py-8">
+        <header className="flex items-center justify-between">
+          <span className="font-instrument-sans text-sm font-medium tracking-[0.18em] text-text/70 uppercase">
+            Shipyard
+          </span>
+          <span className="font-instrument-sans text-xs tracking-[0.16em] text-muted uppercase">
+            01 / 02
+          </span>
+        </header>
 
-      {/* Subtle Vignette Overlay for Readability */}
-      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/60 pointer-events-none z-10" />
+        <section className="flex flex-1 items-center justify-center py-24 text-center">
+          <div className="max-w-3xl">
+            <p className="mb-5 font-instrument-sans text-xs font-medium tracking-[0.28em] text-glow uppercase">
+              A place to listen
+            </p>
+            <h1 className="font-fraunces text-6xl leading-none tracking-[-0.045em] text-text sm:text-8xl md:text-9xl">
+              The Shipyard
+            </h1>
+            <p className="mx-auto mt-7 max-w-md font-fraunces text-xl leading-relaxed text-text/75 sm:text-2xl">
+              Built from nostalgia. Runs on music.
+            </p>
 
-      {/* Hero Center Title: THE SHIPYARD */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4 z-15 -translate-y-10 sm:-translate-y-14">
-        <div className="flex flex-col items-center">
-          <h1 className="font-mono text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-[0.25em] text-white/90 uppercase drop-shadow-[0_4px_24px_rgba(0,0,0,0.85)]">
-            THE SHIPYARD
-          </h1>
-          <p className="font-mono text-[12px] sm:text-sm text-white/50 tracking-[0.3em] uppercase mt-2 drop-shadow-md">
-            BUILT FROM NOSTALGIA, RUNS ON MUSIC
-          </p>
-        </div>
-      </div>
-
-      {/* 
-        Top Header Bar:
-        Clock on left.
-        Buttons on right: stacked vertically on mobile / narrow viewports, side-by-side on desktop.
-      */}
-      <header className="absolute top-0 left-0 right-0 flex items-start justify-between p-4 sm:p-6 gap-3 z-20">
-        {/* Top Left: Clock */}
-        <div className="flex items-center shrink-0">
-          <Clock />
-        </div>
-
-        {/* Top Right: Control clusters */}
-        <nav className="flex flex-col items-end sm:flex-row sm:items-center gap-2 sm:gap-2.5 shrink-0">
-
-          {/* ── BG Cycle Cluster ── */}
-          <button
-            onClick={handleCycleImage}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono shadow-md hover:bg-black/70 hover:border-white/20 active:scale-[0.97] transition-all group cursor-pointer whitespace-nowrap shrink-0"
-            aria-label="Change Background Image"
-          >
-            <span className="text-white/35 font-mono text-[10px] tracking-wider shrink-0">BG // {current + 1}</span>
-            <span className="w-px h-3 bg-white/12 shrink-0" />
-            <span className="text-white/75 font-mono text-[11px] tracking-tight group-hover:text-white/95 flex items-center gap-1.5 whitespace-nowrap transition-colors">
-              <span>change image</span>
-              <svg
-                className="w-3 h-3 text-white/40 group-hover:text-white/70 transition-transform group-hover:rotate-180 duration-500 shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a
+                href="/classic"
+                className="inline-flex min-w-44 items-center justify-center rounded-full border border-border bg-surface/80 px-5 py-3 font-instrument-sans text-sm font-medium text-text transition-colors hover:border-glow hover:bg-surface"
               >
-                <path d="M21.5 2v6h-6M2.1 12a10 10 0 0 1 15-8.3l4.4 4.3M2.5 22v-6h6M21.9 12a10 10 0 0 1-15 8.3l-4.4-4.3" />
-              </svg>
-            </span>
-          </button>
-
-          {/* ── Playlist Cluster ── */}
-          <div className="flex items-center gap-0 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono shadow-md whitespace-nowrap shrink-0">
-
-            {/* Label */}
-            <span className="text-white/35 text-[10px] tracking-wider shrink-0 pr-2">PLAYLIST</span>
-            <span className="w-px h-3 bg-white/12 shrink-0 mr-2" />
-
-            {/* Segmented pill toggle */}
-            <div className="flex items-center gap-0.5 bg-white/6 rounded-md p-0.5">
-              <button
-                onClick={() => handleSwitchMode("default")}
-                className={`px-2.5 py-0.5 rounded text-[10px] tracking-wide transition-all duration-150 cursor-pointer ${
-                  playlistMode === "default"
-                    ? "bg-white/15 text-white font-semibold shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]"
-                    : "text-white/35 hover:text-white/65 hover:bg-white/6"
-                }`}
-                title="Use Shipyard default playlist"
+                The Original Room
+              </a>
+              <a
+                href="/player"
+                className="inline-flex min-w-44 items-center justify-center rounded-full bg-primary px-5 py-3 font-instrument-sans text-sm font-medium text-text shadow-[0_0_30px_rgba(91,46,230,0.35)] transition-colors hover:bg-glow"
               >
-                default
-              </button>
-              <button
-                onClick={() => handleSwitchMode("custom")}
-                className={`px-2.5 py-0.5 rounded text-[10px] tracking-wide transition-all duration-150 cursor-pointer ${
-                  playlistMode === "custom"
-                    ? "bg-amber-500/20 text-amber-300 font-semibold shadow-[inset_0_0_0_1px_rgba(251,146,60,0.25)]"
-                    : "text-white/35 hover:text-white/65 hover:bg-white/6"
-                }`}
-                title="Use your own custom playlist"
-              >
-                custom
-              </button>
+                Explore the New Player
+              </a>
             </div>
-
-            {/* Manage action — only when custom is active */}
-            {playlistMode === "custom" && (
-              <>
-                <span className="w-px h-3 bg-white/12 shrink-0 mx-2" />
-                <button
-                  onClick={() => setShowPlaylistPanel((v) => !v)}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] tracking-wide border transition-all duration-150 cursor-pointer ${
-                    showPlaylistPanel
-                      ? "bg-amber-500/15 border-amber-500/30 text-amber-300"
-                      : "border-white/10 text-white/40 hover:text-white/80 hover:bg-white/[0.07] hover:border-white/20"
-                  }`}
-                  title="Manage custom playlist"
-                >
-                  <span>{showPlaylistPanel ? "close" : "manage"}</span>
-                  <span className="text-[9px] opacity-70">{showPlaylistPanel ? "✕" : "✎"}</span>
-                </button>
-              </>
-            )}
           </div>
-        </nav>
-      </header>
+        </section>
 
-      {/* Custom Playlist Panel — centered on screen, above the player */}
-      {playlistMode === "custom" && showPlaylistPanel && (
-        <CustomPlaylistPanel
-          tracks={customTracks}
-          onTracksChange={(updated) => {
-            setCustomTracks(updated);
-            saveCustomTracks(updated);
-          }}
-          onClose={() => setShowPlaylistPanel(false)}
-        />
-      )}
-
-      {/* Bottom Center: Music Player Container */}
-      <footer className="absolute bottom-6 left-0 right-0 flex justify-center px-4 z-20">
-        <MusicPlayer
-          playlistMode={playlistMode}
-          customTracks={customTracks}
-          onOpenPanel={handleOpenPanel}
-        />
-      </footer>
+        <footer className="flex flex-col items-center gap-4 border-t border-border/70 pt-5 text-center sm:flex-row sm:justify-between sm:text-left">
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/75 px-4 py-2 font-instrument-sans text-xs font-medium text-text transition-colors hover:border-glow hover:text-glow"
+          >
+            <span aria-hidden="true">★</span>
+            <span>Star on GitHub</span>
+            {stars !== null && <span className="text-muted">{stars}</span>}
+          </a>
+          <p className="font-instrument-sans text-xs tracking-wide text-muted">
+            Built by{" "}
+            <a
+              href={PORTFOLIO_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-text transition-colors hover:text-glow"
+            >
+              Taksh Patel
+            </a>
+          </p>
+        </footer>
+      </div>
     </main>
   );
 }
