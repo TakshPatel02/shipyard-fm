@@ -3,6 +3,16 @@
 @theme {
   --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-instrument-sans: var(--font-instrument), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-fraunces: var(--font-fraunces-source), Georgia, serif;
+
+  --color-background: #050509;
+  --color-surface: #0d0b16;
+  --color-border: #2a2540;
+  --color-primary: #5b2ee6;
+  --color-glow: #8b6cff;
+  --color-text: #f2f0fa;
+  --color-muted: #8a86a0;
 }
 
 html, body {
