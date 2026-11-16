@@ -314,6 +314,10 @@ float heightAt(vec2 css) {
   return h;
 }
 
+float cellRandom(vec2 value) {
+  return fract(sin(dot(value, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
 void main() {
   vec2 cell = floor(gl_FragCoord.xy);
   vec2 center = uOrigin + (cell + 0.5) * uPitch;
@@ -349,7 +353,8 @@ void main() {
   }
 
   float reach = length(css - 0.5 * uSize) / max(0.5 * length(uSize), 1.0);
-  float appear = smoothstep(reach - 0.05, reach + 0.3, uAppear * 1.35);
+  float stagger = reach * 0.24 + cellRandom(cell) * 0.2;
+  float appear = smoothstep(0.0, 0.38, uAppear - stagger);
 
   float alpha = uOpacity * fade * appear * (0.22 + 0.78 * level);
   float lift = clamp(h * uDepth * 0.42, -0.48, 0.48);
