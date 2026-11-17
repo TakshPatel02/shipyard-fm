@@ -21,7 +21,6 @@ export const TRACKS: Track[] = [
   { id: "c3aj-wR3uos", title: "Yeh Parda Hata Do", artist: "Mohammed Rafi & Asha Bhosle" },
   { id: "4QVu6Vo6Jhw", title: "Dhan Te Nan", artist: "Vishal Bhardwaj" },
   { id: "7vkW5PNBhDU", title: "Chalti Hai Kya 9 Se 12", artist: "Dev Negi & Neha Kakkar" },
-  { id: "t2v3GDhEZno", title: "Pal Pal Dil Ke Paas", artist: "Kishore Kumar" },
   { id: "qoq8B8ThgEM", title: "Tujh Mein Rab Dikhta Hai", artist: "Roop Kumar Rathod" },
   { id: "DAYszemgPxc", title: "Main Agar Kahoon", artist: "Sonu Nigam & Shreya Ghoshal" },
   { id: "qpIdoaaPa6U", title: "Jeene Laga Hoon", artist: "Atif Aslam & Shreya Ghoshal" },
