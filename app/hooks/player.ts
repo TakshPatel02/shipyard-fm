@@ -248,6 +248,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     }
 
     const nextIdx = (trackIndexRef.current + 1) % tracks.length;
+    trackIndexRef.current = nextIdx;
     setTrackIndex(nextIdx);
     savePlayerState({
       trackIndex: nextIdx,
@@ -302,6 +303,21 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
           },
           onStateChange: (event: any) => {
             const YTState = window.YT.PlayerState;
+            let eventVideoId: string | undefined;
+            try {
+              eventVideoId = event.target?.getVideoData?.().video_id;
+            } catch {
+              eventVideoId = undefined;
+            }
+            const currentVideoId = activeTracksRef.current[trackIndexRef.current]?.id;
+            if (
+              event.data === YTState.ENDED &&
+              eventVideoId &&
+              currentVideoId &&
+              eventVideoId !== currentVideoId
+            ) {
+              return;
+            }
             if (event.data === YTState.PLAYING) {
               if (!userHasClickedPlayRef.current) {
                 event.target.pauseVideo();
@@ -330,6 +346,14 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
             }
           },
           onError: (event: any) => {
+            let eventVideoId: string | undefined;
+            try {
+              eventVideoId = event.target?.getVideoData?.().video_id;
+            } catch {
+              eventVideoId = undefined;
+            }
+            const currentVideoId = activeTracksRef.current[trackIndexRef.current]?.id;
+            if (eventVideoId && currentVideoId && eventVideoId !== currentVideoId) return;
             console.warn("YouTube player error code:", event.data);
             setStatus("Skipped unavailable track");
             handleNextTrack();
@@ -377,6 +401,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     const tracks = activeTracksRef.current;
     if (!tracks.length) return;
     const prevIdx = (trackIndexRef.current - 1 + tracks.length) % tracks.length;
+    trackIndexRef.current = prevIdx;
     setTrackIndex(prevIdx);
     savePlayerState({
       trackIndex: prevIdx,
@@ -399,6 +424,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     const tracks = activeTracksRef.current;
     if (!tracks.length) return;
     const wrappedIdx = ((targetIndex % tracks.length) + tracks.length) % tracks.length;
+    trackIndexRef.current = wrappedIdx;
     setTrackIndex(wrappedIdx);
     savePlayerState({
       trackIndex: wrappedIdx,
