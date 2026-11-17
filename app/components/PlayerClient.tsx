@@ -57,7 +57,7 @@ export default function PlayerClient() {
       {/* 2) Ambient Scrims */}
       {/* Left scrim behind track info */}
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 w-3/5 z-[5]"
+        className="pointer-events-none absolute inset-y-0 left-0 w-3/5 z-5"
         style={{
           background:
             "linear-gradient(to right, rgba(7,6,11,0.85) 0%, rgba(7,6,11,0.45) 45%, transparent 100%)",
@@ -66,7 +66,7 @@ export default function PlayerClient() {
       />
       {/* Right scrim behind cards */}
       <div
-        className="pointer-events-none absolute inset-y-0 right-0 w-2/5 z-[5]"
+        className="pointer-events-none absolute inset-y-0 right-0 w-2/5 z-5"
         style={{
           background:
             "linear-gradient(to left, rgba(7,6,11,0.7) 0%, transparent 60%)",
@@ -75,7 +75,7 @@ export default function PlayerClient() {
       />
       {/* Bottom scrim */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 z-[5]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 z-5"
         style={{
           background: "linear-gradient(to top, rgba(7,6,11,0.75) 0%, transparent 60%)",
         }}
@@ -89,7 +89,7 @@ export default function PlayerClient() {
           aria-label="Current track details"
           className="absolute inset-y-0 left-0 w-[50%] lg:w-[52%] z-20 flex flex-col justify-center px-10 md:px-18 lg:px-24 pointer-events-none min-w-0"
         >
-          <div className="pointer-events-auto max-w-[620px] w-full">
+          <div className="pointer-events-auto max-w-155 w-full">
             {track && (
               <PlayerTrackInfo
                 track={track}
@@ -121,7 +121,7 @@ export default function PlayerClient() {
       {/* 4) Hidden YouTube iframe container */}
       <div
         ref={containerRef}
-        className="pointer-events-none fixed -left-[9999px] -top-[9999px] h-px w-px opacity-0"
+        className="pointer-events-none fixed left-[-9999px] top-[-9999px] h-px w-px opacity-0"
         aria-hidden="true"
       >
         <div id="youtube-player-frame" />

@@ -210,7 +210,7 @@ export default function PlayerArcStack({
 
               {/* Subtle border highlight for inactive cards */}
               {!isActive && (
-                <div className="absolute inset-0 rounded-[18px] border border-white/[0.08] pointer-events-none" />
+                <div className="absolute inset-0 rounded-[18px] border border-white/8 pointer-events-none" />
               )}
 
               {/* Active card premium rim and glow */}

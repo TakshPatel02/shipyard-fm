@@ -54,7 +54,7 @@ export default function PlayerTrackInfo({
       {/* Status or navigation hint */}
       <div className="mt-6 flex items-center gap-2">
         {status ? (
-          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-[#8B6CFF] bg-[#8B6CFF]/10 border border-[#8B6CFF]/20 px-2.5 py-1 rounded-md">
+          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-glow bg-glow/10 border border-glow/20 px-2.5 py-1 rounded-md">
             {status}
           </span>
         ) : (
