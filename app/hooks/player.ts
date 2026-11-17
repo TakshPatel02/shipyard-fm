@@ -84,7 +84,9 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
   const [repeatCount, setRepeatCount] = useState<number>(0);
   const [isMinimized, setIsMinimized] = useState<boolean>(false);
   const [hasHydrated, setHasHydrated] = useState<boolean>(false);
+  const [status, setStatus] = useState<string>("");
 
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<any>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const trackIndexRef = useRef<number>(trackIndex);
@@ -306,6 +308,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
                 isUserPausedRef.current = true;
                 return;
               }
+              setStatus("");
               setIsPlaying(true);
               isUserPausedRef.current = false;
               startProgressTracking();
@@ -328,6 +331,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
           },
           onError: (event: any) => {
             console.warn("YouTube player error code:", event.data);
+            setStatus("Skipped unavailable track");
             handleNextTrack();
           },
         },
@@ -386,6 +390,28 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     isUserPausedRef.current = false;
     if (playerRef.current && typeof playerRef.current.loadVideoById === "function") {
       playerRef.current.loadVideoById(tracks[prevIdx].id);
+      setIsPlaying(true);
+    }
+  }, []);
+
+  const goTo = useCallback((targetIndex: number) => {
+    userHasClickedPlayRef.current = true;
+    const tracks = activeTracksRef.current;
+    if (!tracks.length) return;
+    const wrappedIdx = ((targetIndex % tracks.length) + tracks.length) % tracks.length;
+    setTrackIndex(wrappedIdx);
+    savePlayerState({
+      trackIndex: wrappedIdx,
+      currentTime: 0,
+      volume: volumeRef.current,
+      isRepeat: isRepeatRef.current,
+    });
+    setCurrentTime(0);
+    setDuration(0);
+    setRepeatCount(0);
+    isUserPausedRef.current = false;
+    if (playerRef.current && typeof playerRef.current.loadVideoById === "function") {
+      playerRef.current.loadVideoById(tracks[wrappedIdx].id);
       setIsPlaying(true);
     }
   }, []);
@@ -573,5 +599,33 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     toggleRepeat,
     trackIndex,
     volume,
+
+    // Additive exports
+    status,
+    containerRef,
+    goTo,
+    playlist: activeTracks,
+    index: trackIndex,
+    track: currentTrack,
+    play: () => {
+      if (!playerRef.current || !isReady) return;
+      userHasClickedPlayRef.current = true;
+      isUserPausedRef.current = false;
+      playerRef.current.playVideo();
+    },
+    pause: () => {
+      if (!playerRef.current || !isReady) return;
+      isUserPausedRef.current = true;
+      playerRef.current.pauseVideo();
+    },
+    next: handleNextTrack,
+    prev: handlePrevTrack,
+    setVolume: (val: number) => {
+      setVolume(val);
+      if (playerRef.current && typeof playerRef.current.setVolume === "function") {
+        playerRef.current.setVolume(val);
+        setIsMuted(val === 0);
+      }
+    },
   };
 }
