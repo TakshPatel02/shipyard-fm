@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { FaArrowLeft } from "react-icons/fa6";
 import PatternWaves from "./PatternWaves";
 import PlayerArcStack from "./PlayerArcStack";
 import PlayerController from "./PlayerController";
@@ -44,6 +46,15 @@ export default function PlayerClient() {
 
   return (
     <main className="relative h-svh min-h-svh w-full overflow-hidden bg-[#07060B] font-instrument-sans text-[#F4F1EA]">
+      <Link
+        href="/"
+        aria-label="Back to homepage"
+        className="absolute left-4 top-4 z-30 inline-flex items-center gap-2 text-sm font-medium text-[#F4F1EA]/75 transition-colors hover:text-[#F4F1EA] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-glow sm:left-8 sm:top-7 md:left-16"
+      >
+        <FaArrowLeft aria-hidden="true" className="text-xs" />
+        <span>Back</span>
+      </Link>
+
       {/* 1) Canvas: absolute inset-0 z-0 container */}
       <div
         aria-hidden="true"

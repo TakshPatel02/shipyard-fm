@@ -170,23 +170,9 @@ export default function PlayerController({
       </div>
 
       {/* ── Bottom Row: Full-Width Voice / Volume Control ── */}
-      <div className="mt-6 flex items-center gap-3 w-full">
-        <button
-          type="button"
-          onClick={onToggleMute}
-          className="text-[#A9A4B8]/80 hover:text-white transition-colors cursor-pointer p-1 shrink-0"
-          title={isMuted || volume === 0 ? "Unmute" : "Mute"}
-          aria-label={isMuted || volume === 0 ? "Unmute" : "Mute"}
-        >
-          {isMuted || volume === 0 ? (
-            <FaVolumeXmark className="text-base sm:text-lg text-rose-400" />
-          ) : (
-            <FaVolumeHigh className="text-base sm:text-lg" />
-          )}
-        </button>
-
-        {/* Full-width volume track with interactive thumb */}
-        <div className="relative flex-1 h-3 flex items-center group cursor-pointer">
+      <div className="mt-6 w-full">
+        {/* Full-width volume track aligned with the progress track */}
+        <div className="relative w-full h-3 flex items-center group cursor-pointer">
           <div className="w-full h-1 sm:h-1.5 rounded-full bg-white/15 overflow-hidden group-hover:bg-white/20 transition-colors">
             <div
               className="h-full bg-white/90 rounded-full transition-all duration-75"
@@ -207,10 +193,24 @@ export default function PlayerController({
             aria-label="Volume control"
           />
         </div>
-
-        <span className="text-xs font-mono text-[#A9A4B8]/80 tabular-nums w-8 text-right shrink-0">
-          {isMuted ? "0%" : `${volume}%`}
-        </span>
+        <div className="mt-1 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onToggleMute}
+            className="text-[#A9A4B8]/80 hover:text-white transition-colors cursor-pointer p-1"
+            title={isMuted || volume === 0 ? "Unmute" : "Mute"}
+            aria-label={isMuted || volume === 0 ? "Unmute" : "Mute"}
+          >
+            {isMuted || volume === 0 ? (
+              <FaVolumeXmark className="text-base sm:text-lg text-rose-400" />
+            ) : (
+              <FaVolumeHigh className="text-base sm:text-lg" />
+            )}
+          </button>
+          <span className="text-xs font-mono text-[#A9A4B8]/80 tabular-nums">
+            {isMuted ? "0%" : `${volume}%`}
+          </span>
+        </div>
       </div>
     </div>
   );

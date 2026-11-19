@@ -207,7 +207,7 @@ export default function PlayerArcStack({
               <motion.div
                 className="absolute inset-0 bg-black pointer-events-none"
                 style={{ borderRadius: 14 }}
-                animate={{ opacity: isActive ? 0 : 0.42 }}
+                animate={{ opacity: isActive ? 0 : 0.64 }}
                 transition={{ duration: 0.3 }}
               />
 
