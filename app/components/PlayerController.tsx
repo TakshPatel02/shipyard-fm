@@ -64,7 +64,7 @@ export default function PlayerController({
   const clampedProgress = Math.min(Math.max(progressPercent, 0), 100);
 
   return (
-    <div className="w-[340px] sm:w-[400px] select-none text-[#F4F1EA]">
+    <div className="w-85 sm:w-100 select-none text-[#F4F1EA]">
       {/* ── Track Heading & 01/24 Track Number (Baseline aligned) ── */}
       <div className="min-w-0">
         <div className="flex items-baseline justify-between gap-3">
@@ -88,7 +88,7 @@ export default function PlayerController({
         <div className="relative w-full h-3 flex items-center group cursor-pointer">
           <div className="w-full h-1 rounded-full bg-white/20 overflow-hidden">
             <div
-              className="h-full rounded-full bg-[#8B6CFF]"
+              className="h-full rounded-full bg-glow"
               style={{ width: `${clampedProgress}%` }}
             />
           </div>
@@ -161,7 +161,7 @@ export default function PlayerController({
           type="button"
           onClick={onToggleRepeat}
           className={`transition-colors cursor-pointer p-1.5 ${
-            isRepeat ? "text-[#8B6CFF]" : "text-[#A9A4B8]/60 hover:text-white"
+            isRepeat ? "text-glow" : "text-[#A9A4B8]/60 hover:text-white"
           }`}
           title={isRepeat ? "Repeat ON" : "Enable Repeat"}
         >
