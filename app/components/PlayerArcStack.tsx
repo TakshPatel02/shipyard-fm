@@ -1,35 +1,66 @@
 "use client";
 
+/**
+ * PlayerArcStack — Right-side vertical card stack.
+ *
+ * Arc: all cards' RIGHT edges sit near the right border.
+ * Active card extends furthest left; outer cards retract toward right.
+ * Slight rotation per slot (wheel-like).
+ * Tight vertical overlap, narrow horizontal spread.
+ *
+ * NOTE: No keyboard listener here — the player hook handles ArrowLeft/Right.
+ * Adding one here would cause double-skip (both fire simultaneously).
+ */
+
 import { useEffect, useRef } from "react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import type { Track } from "../lib/music-data";
 
-// ─── Card dimensions ─────────────────────────────────────────────────────────
-const CARD_W = 340;
-const CARD_H = 212; // 16:10 aspect ratio matching reference
+// ─── Card dimensions ──────────────────────────────────────────────────────────
+const CARD_W = 330;
+const CARD_H = 200;
+const HALF_W = CARD_W / 2; // 165
 
-// ─── Right-side sweeping arc curve ───────────────────────────────────────────
-// Anchored on the right screen edge (x=0 is right edge, negative x goes into screen).
-// Equator (offset 0) bows farthest out to the left towards the center.
-// Top cards (offset -1, -2) tilt clockwise (+15°, +30°), touching the right border.
-// Bottom cards (offset +1, +2) tilt counter-clockwise (-15°, -30°), touching the right border and bottom edge.
-type Offset = -3 | -2 | -1 | 0 | 1 | 2 | 3;
+// ─── Slot table ───────────────────────────────────────────────────────────────
+// x: how far card center sits LEFT of the right-edge anchor (negative = left).
+// Right edge of card = anchor + x + HALF_W ≈ 0 (flush with right border).
+//
+// HORIZONTAL SPREAD is intentionally narrow so cards don't jump far apart.
+// The active card extends ~145px beyond flush; adjacent cards only 95px less.
+//
+// y: vertical stack with tight 95px step (cards overlap).
+// rotate: gentle tilt like a wheel. Max ±10° at outer slots.
+
+type Offset = -4 | -3 | -2 | -1 | 0 | 1 | 2 | 3 | 4;
+
+// Arc geometry — quadratic curve so inner cards stay close, outer cards sweep back smoothly.
+// Shifted toward the right side as requested.
+const FLUSH     = -(HALF_W);       // right-edge flush = -165
+const ACTIVE_X  = FLUSH - 155;     // active card center: -320 (shifted ~65px right compared to -385)
+const ARC_CURVE = 22;              // smooth quadratic curve coefficient
+
+function slotX(offset: number) {
+  return ACTIVE_X + offset * offset * ARC_CURVE;
+}
 
 const SLOT: Record<
   Offset,
   { x: number; y: number; scale: number; rotate: number; opacity: number; zIndex: number }
 > = {
-  [-3]: { x:   20, y: -560, scale: 0.58, rotate:  42, opacity: 0,    zIndex: 1 },
-  [-2]: { x:  -95, y: -390, scale: 0.74, rotate:  30, opacity: 0.40, zIndex: 4 },
-  [-1]: { x: -210, y: -205, scale: 0.88, rotate:  15, opacity: 0.74, zIndex: 7 },
-  [ 0]: { x: -280, y:    0, scale: 1.00, rotate:   0, opacity: 1.00, zIndex: 10 },
-  [ 1]: { x: -210, y:  205, scale: 0.88, rotate: -15, opacity: 0.74, zIndex: 7 },
-  [ 2]: { x:  -95, y:  390, scale: 0.74, rotate: -30, opacity: 0.40, zIndex: 4 },
-  [ 3]: { x:   20, y:  560, scale: 0.58, rotate: -42, opacity: 0,    zIndex: 1 },
+  //  offset        x        y     scale   rotate   opacity  z
+  [-4]: { x: slotX(4), y: -445, scale: 0.65, rotate: +34, opacity: 0.00, zIndex: 0  },
+  [-3]: { x: slotX(3), y: -348, scale: 0.74, rotate: +24, opacity: 0.35, zIndex: 2  },
+  [-2]: { x: slotX(2), y: -242, scale: 0.82, rotate: +15, opacity: 0.58, zIndex: 5  },
+  [-1]: { x: slotX(1), y: -125, scale: 0.90, rotate:  +7, opacity: 0.82, zIndex: 8  },
+  [ 0]: { x: slotX(0), y:    0, scale: 1.00, rotate:   0, opacity: 1.00, zIndex: 11 },
+  [ 1]: { x: slotX(1), y: +125, scale: 0.90, rotate:  -7, opacity: 0.82, zIndex: 8  },
+  [ 2]: { x: slotX(2), y: +242, scale: 0.82, rotate: -15, opacity: 0.58, zIndex: 5  },
+  [ 3]: { x: slotX(3), y: +348, scale: 0.74, rotate: -24, opacity: 0.35, zIndex: 2  },
+  [ 4]: { x: slotX(4), y: +445, scale: 0.65, rotate: -34, opacity: 0.00, zIndex: 0  },
 };
 
-const OFFSETS = [-3, -2, -1, 0, 1, 2, 3] as Offset[];
+const OFFSETS = [-4, -3, -2, -1, 0, 1, 2, 3, 4] as Offset[];
 
 interface PlayerArcStackProps {
   tracks: Track[];
@@ -43,97 +74,66 @@ export default function PlayerArcStack({
   onIndexChange,
 }: PlayerArcStackProps) {
   const count = tracks.length;
-
-  // Stable ref for the latest active index
   const activeRef = useRef(activeIndex);
+  const prefersReducedMotion = useReducedMotion();
+
   useEffect(() => {
     activeRef.current = activeIndex;
   }, [activeIndex]);
 
-  // ─── Single-step scroll with momentum absorption ───────────────────────────
+  // ─── Wheel: snappy single-step with momentum absorption ───────────────────
+  // No keyboard handler here — the player hook already handles ArrowLeft/Right.
+  // Adding one here would cause double-skip bugs.
   useEffect(() => {
     if (count < 2) return;
 
-    let isLocked = false;
-    let unlockTimer: ReturnType<typeof setTimeout> | null = null;
+    let locked = false;
+    let accumulated = 0;
+    let lockTimer: ReturnType<typeof setTimeout> | null = null;
     let momentumTimer: ReturnType<typeof setTimeout> | null = null;
-    let accumulatedDelta = 0;
-    const THRESHOLD = 24;
+    const THRESHOLD   = 28;
+    const LOCK_MS     = 420;
+    const MOMENTUM_MS = 160;
+
+    function step(dir: 1 | -1) {
+      locked = true;
+      accumulated = 0;
+      const next = ((activeRef.current + dir) % count + count) % count;
+      onIndexChange(next);
+      if (lockTimer) clearTimeout(lockTimer);
+      lockTimer = setTimeout(() => { locked = false; }, LOCK_MS);
+    }
+
+    function absorbMomentum() {
+      if (momentumTimer) clearTimeout(momentumTimer);
+      momentumTimer = setTimeout(() => {
+        locked = false;
+        accumulated = 0;
+      }, MOMENTUM_MS);
+    }
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-
-      if (isLocked) {
-        // Absorb trackpad momentum events
-        if (momentumTimer) clearTimeout(momentumTimer);
-        momentumTimer = setTimeout(() => {
-          isLocked = false;
-          accumulatedDelta = 0;
-        }, 120);
-        return;
-      }
-
-      accumulatedDelta += e.deltaY;
-
-      if (Math.abs(accumulatedDelta) >= THRESHOLD) {
-        isLocked = true;
-        const dir = accumulatedDelta > 0 ? 1 : -1;
-        accumulatedDelta = 0;
-
-        const next = ((activeRef.current + dir) % count + count) % count;
-        onIndexChange(next);
-
-        // Lock for transition duration
-        if (unlockTimer) clearTimeout(unlockTimer);
-        unlockTimer = setTimeout(() => {
-          if (!momentumTimer) {
-            isLocked = false;
-          }
-        }, 420);
-
-        if (momentumTimer) clearTimeout(momentumTimer);
-        momentumTimer = setTimeout(() => {
-          isLocked = false;
-        }, 250);
+      if (locked) { absorbMomentum(); return; }
+      accumulated += e.deltaY;
+      if (Math.abs(accumulated) >= THRESHOLD) {
+        step(accumulated > 0 ? 1 : -1);
+        absorbMomentum();
       }
     };
 
     window.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       window.removeEventListener("wheel", onWheel);
-      if (unlockTimer) clearTimeout(unlockTimer);
+      if (lockTimer)     clearTimeout(lockTimer);
       if (momentumTimer) clearTimeout(momentumTimer);
     };
   }, [count, onIndexChange]);
 
-  // ─── Keyboard arrow navigation ─────────────────────────────────────────────
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (
-        document.activeElement?.tagName === "INPUT" ||
-        document.activeElement?.tagName === "TEXTAREA"
-      ) {
-        return;
-      }
-      if (e.code === "ArrowUp" || e.code === "ArrowLeft") {
-        e.preventDefault();
-        onIndexChange(((activeRef.current - 1) % count + count) % count);
-      } else if (e.code === "ArrowDown" || e.code === "ArrowRight") {
-        e.preventDefault();
-        onIndexChange(((activeRef.current + 1) % count + count) % count);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [count, onIndexChange]);
-
-  // ─── Fluid, organic spring transition for card motion along the curve ──────
-  const transitionConfig = {
-    type: "spring" as const,
-    stiffness: 260,
-    damping: 26,
-    mass: 0.85,
-  };
+  // Spring: snappy but fluid
+  const spring = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 300, damping: 30, mass: 0.75 };
 
   return (
     <div
@@ -141,55 +141,57 @@ export default function PlayerArcStack({
       aria-label="Track carousel"
       role="region"
     >
-      {/* Anchor point at right edge (x=0), y=center */}
+      {/* Zero-size anchor at RIGHT edge, vertically centered */}
       <div className="relative pointer-events-none" style={{ width: 0, height: 0 }}>
         {OFFSETS.map((offset) => {
           const idx = ((activeIndex + offset) % count + count) % count;
-          const track = tracks[idx];
-          const cfg = SLOT[offset];
-          const isActive = offset === 0;
-          const isClickable = !isActive && cfg.opacity > 0;
+
+          // Skip duplicate slots for small playlists
+          if (count < OFFSETS.length) {
+            const first = OFFSETS.find(
+              (o) => ((activeIndex + o) % count + count) % count === idx
+            );
+            if (first !== offset) return null;
+          }
+
+          const track     = tracks[idx];
+          const cfg       = SLOT[offset];
+          const isActive  = offset === 0;
+          const isVisible = cfg.opacity > 0;
+          const isClickable = !isActive && isVisible;
 
           return (
             <motion.div
               key={idx}
               role={isClickable ? "button" : undefined}
               tabIndex={isClickable ? 0 : undefined}
-              aria-label={isClickable ? `Switch to ${track.title}` : track.title}
+              aria-label={isActive ? track.title : `Go to ${track.title}`}
               className="absolute overflow-hidden pointer-events-auto select-none"
               style={{
                 width: CARD_W,
                 height: CARD_H,
-                borderRadius: 18,
-                left: -CARD_W / 2,
-                top: -CARD_H / 2,
+                borderRadius: 14,
+                left: -HALF_W,
+                top:  -(CARD_H / 2),
                 cursor: isClickable ? "pointer" : "default",
-                zIndex: cfg.zIndex,
               }}
               animate={{
-                x: cfg.x,
-                y: cfg.y,
-                scale: cfg.scale,
-                rotate: cfg.rotate,
+                x:       cfg.x,
+                y:       cfg.y,
+                scale:   cfg.scale,
+                rotate:  cfg.rotate,
                 opacity: cfg.opacity,
+                zIndex:  cfg.zIndex,
               }}
-              transition={transitionConfig}
+              transition={spring}
               whileHover={
                 isClickable
-                  ? { scale: cfg.scale * 1.03, opacity: Math.min(cfg.opacity + 0.15, 0.95) }
+                  ? { scale: cfg.scale * 1.04, opacity: Math.min(cfg.opacity + 0.18, 0.95) }
                   : undefined
               }
-              onClick={() => {
-                if (isClickable) onIndexChange(idx);
-              }}
-              onKeyDown={(e) => {
-                if (isClickable && (e.key === "Enter" || e.key === " ")) {
-                  e.preventDefault();
-                  onIndexChange(idx);
-                }
-              }}
+              onClick={() => { if (isClickable) onIndexChange(idx); }}
             >
-              {/* YouTube Album Thumbnail */}
+              {/* Thumbnail */}
               <Image
                 src={`https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
                 alt={track.title}
@@ -198,28 +200,38 @@ export default function PlayerArcStack({
                 sizes={`${CARD_W}px`}
                 unoptimized
                 priority={isActive}
-                loading="eager"
               />
 
               {/* Dark veil for inactive cards */}
               <motion.div
-                className="absolute inset-0 rounded-[18px] bg-black pointer-events-none"
-                animate={{ opacity: isActive ? 0 : 0.44 }}
+                className="absolute inset-0 bg-black pointer-events-none"
+                style={{ borderRadius: 14 }}
+                animate={{ opacity: isActive ? 0 : 0.42 }}
                 transition={{ duration: 0.3 }}
               />
 
-              {/* Subtle border highlight for inactive cards */}
-              {!isActive && (
-                <div className="absolute inset-0 rounded-[18px] border border-white/8 pointer-events-none" />
-              )}
-
-              {/* Active card premium rim and glow */}
+              {/* Active: glowing rim */}
               {isActive && (
                 <div
-                  className="absolute inset-0 rounded-[18px] pointer-events-none"
+                  className="absolute inset-0 pointer-events-none"
                   style={{
-                    boxShadow:
-                      "inset 0 0 0 1.5px rgba(255,255,255,0.25), 0 32px 75px rgba(0,0,0,0.8), 0 0 45px rgba(139,108,255,0.24)",
+                    borderRadius: 14,
+                    boxShadow: [
+                      "inset 0 0 0 1.5px rgba(255,255,255,0.28)",
+                      "0 20px 55px rgba(0,0,0,0.75)",
+                      "0 0 36px rgba(139,108,255,0.22)",
+                    ].join(", "),
+                  }}
+                />
+              )}
+
+              {/* Inactive: faint border */}
+              {!isActive && isVisible && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    borderRadius: 14,
+                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
                   }}
                 />
               )}

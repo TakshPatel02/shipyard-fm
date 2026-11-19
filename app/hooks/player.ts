@@ -97,6 +97,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
   const volumeRef = useRef<number>(volume);
   const currentTimeRef = useRef<number>(0);
   const activeTracksRef = useRef<Track[]>(TRACKS);
+  const navigationLockUntilRef = useRef<number>(0);
 
   useEffect(() => {
     const saved = loadPlayerState();
@@ -248,6 +249,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     }
 
     const nextIdx = (trackIndexRef.current + 1) % tracks.length;
+    navigationLockUntilRef.current = Date.now() + 900;
     trackIndexRef.current = nextIdx;
     setTrackIndex(nextIdx);
     savePlayerState({
@@ -318,6 +320,12 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
             ) {
               return;
             }
+            if (
+              event.data === YTState.ENDED &&
+              Date.now() < navigationLockUntilRef.current
+            ) {
+              return;
+            }
             if (event.data === YTState.PLAYING) {
               if (!userHasClickedPlayRef.current) {
                 event.target.pauseVideo();
@@ -354,6 +362,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
             }
             const currentVideoId = activeTracksRef.current[trackIndexRef.current]?.id;
             if (eventVideoId && currentVideoId && eventVideoId !== currentVideoId) return;
+            if (Date.now() < navigationLockUntilRef.current) return;
             console.warn("YouTube player error code:", event.data);
             setStatus("Skipped unavailable track");
             handleNextTrack();
@@ -401,6 +410,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     const tracks = activeTracksRef.current;
     if (!tracks.length) return;
     const prevIdx = (trackIndexRef.current - 1 + tracks.length) % tracks.length;
+    navigationLockUntilRef.current = Date.now() + 900;
     trackIndexRef.current = prevIdx;
     setTrackIndex(prevIdx);
     savePlayerState({
@@ -424,6 +434,7 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     const tracks = activeTracksRef.current;
     if (!tracks.length) return;
     const wrappedIdx = ((targetIndex % tracks.length) + tracks.length) % tracks.length;
+    navigationLockUntilRef.current = Date.now() + 900;
     trackIndexRef.current = wrappedIdx;
     setTrackIndex(wrappedIdx);
     savePlayerState({
