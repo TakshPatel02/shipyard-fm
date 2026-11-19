@@ -200,6 +200,7 @@ export default function PlayerArcStack({
                 sizes={`${CARD_W}px`}
                 unoptimized
                 priority={isActive}
+                loading='eager'
               />
 
               {/* Dark veil for inactive cards */}
