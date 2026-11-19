@@ -2,7 +2,7 @@
 
 import PatternWaves from "./PatternWaves";
 import PlayerArcStack from "./PlayerArcStack";
-import PlayerTrackInfo from "./PlayerTrackInfo";
+import PlayerController from "./PlayerController";
 import { usePlayer } from "../hooks/player";
 
 export default function PlayerClient() {
@@ -13,10 +13,34 @@ export default function PlayerClient() {
     status,
     goTo,
     containerRef,
+    isPlaying,
+    handlePlayPause,
+    handleNextTrack,
+    handlePrevTrack,
+    currentTime,
+    duration,
+    progressPercent,
+    handleSeekChange,
+    volume,
+    isMuted,
+    handleVolumeChange,
+    toggleMute,
+    isRepeat,
+    repeatCount,
+    toggleRepeat,
   } = usePlayer({
     playlistMode: "default",
     customTracks: [],
   });
+
+  const handleShuffle = () => {
+    if (playlist.length <= 1) return;
+    let nextIdx = index;
+    while (nextIdx === index) {
+      nextIdx = Math.floor(Math.random() * playlist.length);
+    }
+    goTo(nextIdx);
+  };
 
   return (
     <main className="relative h-svh min-h-svh w-full overflow-hidden bg-[#07060B] font-instrument-sans text-[#F4F1EA]">
@@ -55,7 +79,7 @@ export default function PlayerClient() {
       </div>
 
       {/* 2) Ambient Scrims */}
-      {/* Left scrim behind track info */}
+      {/* Left scrim behind player controls */}
       <div
         className="pointer-events-none absolute inset-y-0 left-0 w-3/5 z-5"
         style={{
@@ -82,43 +106,51 @@ export default function PlayerClient() {
         aria-hidden="true"
       />
 
-      {/* 3) Workspace: Left Info + Right Arc Curve */}
-      <div className="absolute inset-0 z-20 flex w-full pointer-events-none">
-        {/* Left Track Info Panel */}
-        <section
-          aria-label="Current track details"
-          className="absolute inset-y-0 left-0 w-[50%] lg:w-[52%] z-20 flex flex-col justify-center px-10 md:px-18 lg:px-24 pointer-events-none min-w-0"
-        >
-          <div className="pointer-events-auto max-w-155 w-full">
-            {track && (
-              <PlayerTrackInfo
-                track={track}
-                trackIndex={index}
-                totalTracks={playlist.length}
-                status={status}
-              />
-            )}
-          </div>
-        </section>
-
-        {/* Right Arc Stack Panel: curve on right side, touching the right border */}
-        <section
-          aria-label="Track playlist carousel"
-          className="absolute inset-y-0 right-0 w-[50%] lg:w-[48%] z-10 pointer-events-none flex items-center justify-end overflow-visible"
-        >
-          <div className="relative w-full h-full pointer-events-auto">
-            {playlist.length > 0 && (
-              <PlayerArcStack
-                tracks={playlist}
-                activeIndex={index}
-                onIndexChange={goTo}
-              />
-            )}
-          </div>
-        </section>
+      {/* 3) Left Bottom Music Player Controller (Using home screen content margins) */}
+      <div className="absolute bottom-10 left-4 z-20 pointer-events-auto sm:bottom-16 sm:left-8 md:bottom-16 md:left-16">
+        {track && (
+          <PlayerController
+            track={track}
+            trackIndex={index}
+            totalTracks={playlist.length}
+            isPlaying={isPlaying}
+            onPlayPause={handlePlayPause}
+            onNext={handleNextTrack}
+            onPrev={handlePrevTrack}
+            onShuffle={handleShuffle}
+            isRepeat={isRepeat}
+            repeatCount={repeatCount}
+            onToggleRepeat={toggleRepeat}
+            currentTime={currentTime}
+            duration={duration}
+            progressPercent={progressPercent}
+            onSeekChange={handleSeekChange}
+            volume={volume}
+            isMuted={isMuted}
+            onVolumeChange={handleVolumeChange}
+            onToggleMute={toggleMute}
+            status={status}
+          />
+        )}
       </div>
 
-      {/* 4) Hidden YouTube iframe container */}
+      {/* 4) Right Arc Stack Panel: curve on right side, touching the right border */}
+      <section
+        aria-label="Track playlist carousel"
+        className="absolute inset-y-0 right-0 w-[50%] lg:w-[48%] z-10 pointer-events-none flex items-center justify-end overflow-visible"
+      >
+        <div className="relative w-full h-full pointer-events-auto">
+          {playlist.length > 0 && (
+            <PlayerArcStack
+              tracks={playlist}
+              activeIndex={index}
+              onIndexChange={goTo}
+            />
+          )}
+        </div>
+      </section>
+
+      {/* 5) Hidden YouTube iframe container */}
       <div
         ref={containerRef}
         className="pointer-events-none fixed left-[-9999px] top-[-9999px] h-px w-px opacity-0"
