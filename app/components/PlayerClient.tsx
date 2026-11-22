@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useReducedMotion } from "motion/react";
 import { FaArrowLeft } from "react-icons/fa6";
 import PatternWaves from "./PatternWaves";
 import PlayerArcStack from "./PlayerArcStack";
 import PlayerController from "./PlayerController";
 import { usePlayer } from "../hooks/player";
+import { CATEGORIES } from "../lib/music-data";
 
 export default function PlayerClient() {
+  const prefersReducedMotion = useReducedMotion();
+
   const {
     playlist,
     index,
@@ -44,8 +49,19 @@ export default function PlayerClient() {
     goTo(nextIdx);
   };
 
+  // Derive accent color from active track's category
+  const accentColor = track ? CATEGORIES[track.category].color : "#8b6cff";
+
   return (
-    <main className="relative h-svh min-h-svh w-full overflow-hidden bg-[#07060B] font-instrument-sans text-[#F4F1EA]">
+    <main
+      className="relative h-svh min-h-svh w-full overflow-hidden bg-[#07060B] font-instrument-sans text-[#F4F1EA]"
+      style={{
+        "--accent": accentColor,
+        // Transition only when category changes; browser skips if same color.
+        // useReducedMotion → instant switch.
+        transition: prefersReducedMotion ? "none" : "--accent 700ms cubic-bezier(0.4, 0, 0.2, 1)",
+      } as React.CSSProperties}
+    >
       <Link
         href="/"
         aria-label="Back to homepage"
@@ -54,6 +70,13 @@ export default function PlayerClient() {
         <FaArrowLeft aria-hidden="true" className="text-xs" />
         <span>Back</span>
       </Link>
+
+      {/* Preload all 5 category thumbnails so first switch never flashes */}
+      <div className="sr-only" aria-hidden="true">
+        {Object.entries(CATEGORIES).map(([cat, { image }]) => (
+          <Image key={cat} src={image} alt="" width={4} height={4} priority />
+        ))}
+      </div>
 
       {/* 1) Canvas: absolute inset-0 z-0 container */}
       <div
@@ -64,7 +87,7 @@ export default function PlayerClient() {
           preset="silk"
           color="#F4F1EA"
           backgroundColor="#07060B"
-          mode="new"
+          mode={track?.category ?? "new"}
           fade="edges"
           interactive
           cursorSize={50}
@@ -80,7 +103,7 @@ export default function PlayerClient() {
           speed={0.35}
           scale={1}
           direction={20}
-          opacity={0.55}
+          opacity={0.65}
           fadeSize={0.5}
           characters=".:-=+*#%@"
           intro
@@ -88,6 +111,15 @@ export default function PlayerClient() {
           style={{ position: "absolute", inset: 0 }}
         />
       </div>
+
+      {/* Ambient soft radial glow matching track accent color */}
+      <div
+        className="pointer-events-none absolute inset-0 z-1 opacity-20"
+        style={{
+          background: "radial-gradient(ellipse 70% 60% at 75% 50%, var(--accent) 0%, transparent 70%)",
+        }}
+        aria-hidden="true"
+      />
 
       {/* 2) Ambient Scrims */}
       {/* Left scrim behind player controls */}

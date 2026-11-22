@@ -8,7 +8,15 @@ type SurfacePreset = 'silk' | 'ocean' | 'pond' | 'lines' | 'terminal' | 'mesh';
 type PatternKind = 'dot' | 'square' | 'plus' | 'line' | 'glyph';
 type WaveKind = 'silk' | 'swell' | 'ripple';
 type FadeKind = 'edges' | 'center' | 'bottom' | 'top' | 'none';
-type PatternMode = 'idle' | 'classic' | 'new';
+export type PatternMode =
+  | 'idle'
+  | 'classic'
+  | 'new'
+  | 'spiritual'
+  | 'love'
+  | 'sad'
+  | 'energy'
+  | 'chill';
 type Rgba = [number, number, number, number];
 
 interface PresetValues {
@@ -38,7 +46,7 @@ export interface PatternWavesProps extends Partial<PresetValues> {
   cursorStrength?: number;
   intro?: boolean;
   paused?: boolean;
-  mode?: PatternMode;
+  mode?: PatternMode | (string & {});
   className?: string;
   style?: CSSProperties;
 }
@@ -55,7 +63,7 @@ interface Settings extends PresetValues {
   cursorStrength: number;
   intro: boolean;
   paused: boolean;
-  mode: PatternMode;
+  mode: PatternMode | string;
 }
 
 interface RippleField {
@@ -161,7 +169,12 @@ const MAX_DPR = 1.5;
 const MODE_PALETTES: Record<PatternMode, { color: string; glow: string; glowIntensity: number }> = {
   idle: { color: '#5B2EE6', glow: '#8B6CFF', glowIntensity: 0.6 },
   classic: { color: '#B8742F', glow: '#F2A65A', glowIntensity: 1 },
-  new: { color: '#5B2EE6', glow: '#8B6CFF', glowIntensity: 1 }
+  new: { color: '#5B2EE6', glow: '#8B6CFF', glowIntensity: 1 },
+  spiritual: { color: '#B8742F', glow: '#F5B335', glowIntensity: 1 },
+  love: { color: '#9E163B', glow: '#F43F6E', glowIntensity: 1 },
+  sad: { color: '#193D8F', glow: '#3B6FE0', glowIntensity: 1 },
+  energy: { color: '#9E1924', glow: '#E63946', glowIntensity: 1 },
+  chill: { color: '#0F6B5F', glow: '#2DD4BF', glowIntensity: 1 }
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
@@ -692,20 +705,13 @@ const PatternWaves = ({
     });
 
     const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const paletteTargets = {
-      idle: {
-        color: parseColor(MODE_PALETTES.idle.color, [0.357, 0.18, 0.902, 1]),
-        glow: parseColor(MODE_PALETTES.idle.glow, [0.545, 0.424, 1, 1])
-      },
-      classic: {
-        color: parseColor(MODE_PALETTES.classic.color, [0.722, 0.455, 0.184, 1]),
-        glow: parseColor(MODE_PALETTES.classic.glow, [0.949, 0.651, 0.353, 1])
-      },
-      new: {
-        color: parseColor(MODE_PALETTES.new.color, [0.357, 0.18, 0.902, 1]),
-        glow: parseColor(MODE_PALETTES.new.glow, [0.545, 0.424, 1, 1])
-      }
-    };
+    const paletteTargets: Record<string, { color: Rgba; glow: Rgba }> = {};
+    for (const [key, val] of Object.entries(MODE_PALETTES)) {
+      paletteTargets[key] = {
+        color: parseColor(val.color, [0.357, 0.18, 0.902, 1]),
+        glow: parseColor(val.glow, [0.545, 0.424, 1, 1])
+      };
+    }
 
     let width = 1;
     let height = 1;
@@ -720,8 +726,12 @@ const PatternWaves = ({
     let rippleLive = false;
     let rippleClock = 0;
     let atlasKey = '';
-    let renderedColor = [...markUniforms.uColor.value] as [number, number, number];
-    let renderedGlow = [...markUniforms.uGlow.value] as [number, number, number];
+    const initialMode = settingsRef.current?.mode || mode;
+    const initialPalette = paletteTargets[initialMode] || paletteTargets.new || paletteTargets.idle;
+    let renderedColor = initialPalette.color.slice(0, 3) as [number, number, number];
+    let renderedGlow = initialPalette.glow.slice(0, 3) as [number, number, number];
+    markUniforms.uColor.value = renderedColor;
+    markUniforms.uGlow.value = renderedGlow;
     const pointer = { x: 0, y: 0, inside: false, placed: false, lastX: 0, lastY: 0, burst: 0 };
 
     const buildRipple = () => {
@@ -808,9 +818,10 @@ const PatternWaves = ({
       const dt = Math.min(0.05, Math.max(1 / 240, (now - last) / 1000));
       last = now;
       if (!s) return;
-      const palette = paletteTargets[s.mode];
+      const palette = paletteTargets[s.mode] || paletteTargets.new || paletteTargets.idle;
       const targetColor = palette.color;
-      const targetGlow = palette.glow.map((value) => value * MODE_PALETTES[s.mode].glowIntensity) as [number, number, number, number];
+      const glowIntensity = MODE_PALETTES[s.mode as PatternMode]?.glowIntensity ?? 1;
+      const targetGlow = palette.glow.map((value) => value * glowIntensity) as [number, number, number, number];
       const paletteEase = reducedMotion ? 1 : 1 - Math.exp(-dt / 0.6);
       renderedColor = renderedColor.map((value, index) => value + (targetColor[index] - value) * paletteEase) as [number, number, number];
       renderedGlow = renderedGlow.map((value, index) => value + (targetGlow[index] - value) * paletteEase) as [number, number, number];

@@ -16,6 +16,7 @@ import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import type { Track } from "../lib/music-data";
+import { CATEGORIES } from "../lib/music-data";
 
 // ─── Card dimensions ──────────────────────────────────────────────────────────
 const CARD_W = 330;
@@ -191,17 +192,25 @@ export default function PlayerArcStack({
               }
               onClick={() => { if (isClickable) onIndexChange(idx); }}
             >
-              {/* Thumbnail */}
+              {/* Category thumbnail (replaces YouTube thumb) */}
               <Image
-                src={`https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`}
-                alt={track.title}
+                src={CATEGORIES[track.category].image}
+                alt=""
                 fill
                 className="object-cover pointer-events-none"
                 sizes={`${CARD_W}px`}
-                unoptimized
                 priority={isActive}
-                loading='eager'
+                loading={isActive ? "eager" : "lazy"}
               />
+              {/* Track title overlay — Tailwind only, no custom CSS class */}
+              <div className="absolute inset-0 pointer-events-none flex items-center">
+                <span
+                  className="ml-[6%] max-w-[42%] text-white font-bold text-sm leading-tight line-clamp-3"
+                  style={{ textShadow: "0 2px 8px rgba(0,0,0,0.7)" }}
+                >
+                  {track.title}
+                </span>
+              </div>
 
               {/* Dark veil for inactive cards */}
               <motion.div

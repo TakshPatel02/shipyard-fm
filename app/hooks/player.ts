@@ -274,6 +274,13 @@ export function usePlayer({ playlistMode, customTracks }: UsePlayerProps) {
     const initPlayer = () => {
       if (playerRef.current) return;
       if (!window.YT || !window.YT.Player) return;
+      // Guard: the div must be in the DOM before the YT API binds to it.
+      // If not yet mounted (e.g. YT API was already loaded from cache and fires
+      // synchronously before React commits), defer until the next frame.
+      if (!document.getElementById("youtube-player-frame")) {
+        requestAnimationFrame(() => initPlayer());
+        return;
+      }
 
       const tracks = activeTracksRef.current;
       playerRef.current = new window.YT.Player("youtube-player-frame", {

@@ -139,6 +139,7 @@ export function validateImportData(raw: unknown): ImportPayload {
       id: track.id.trim(),
       title: track.title.trim(),
       artist: track.artist.trim(),
+      category: "chill" as const,
     });
   }
 

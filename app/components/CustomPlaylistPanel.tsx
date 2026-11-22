@@ -57,7 +57,7 @@ export default function CustomPlaylistPanel({ tracks, onTracksChange, onClose }:
       setError("Track name is required.");
       return;
     }
-    const updated = [...tracks, { id, title: title.trim(), artist: artist.trim() }];
+    const updated = [...tracks, { id, title: title.trim(), artist: artist.trim(), category: "chill" as const }];
     onTracksChange(updated);
     setUrl("");
     setTitle("");

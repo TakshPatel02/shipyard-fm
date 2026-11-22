@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Required for browser to interpolate --accent as a color (no Tailwind equivalent) */
+@property --accent {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #8b6cff;
+}
+
 @theme {
   --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;

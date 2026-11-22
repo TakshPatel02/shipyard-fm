@@ -88,8 +88,8 @@ export default function PlayerController({
         <div className="relative w-full h-3 flex items-center group cursor-pointer">
           <div className="w-full h-1 rounded-full bg-white/20 overflow-hidden">
             <div
-              className="h-full rounded-full bg-glow"
-              style={{ width: `${clampedProgress}%` }}
+              className="h-full rounded-full transition-[width] duration-100"
+              style={{ width: `${clampedProgress}%`, background: "var(--accent)" }}
             />
           </div>
           <div
