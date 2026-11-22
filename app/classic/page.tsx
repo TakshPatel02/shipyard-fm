@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { FaArrowLeft } from "react-icons/fa6";
 import Clock from "../components/Clock";
 import MusicPlayer from "../components/MusicPlayer";
 import CustomPlaylistPanel from "../components/CustomPlaylistPanel";
@@ -126,8 +128,16 @@ export default function Home() {
         Buttons on right: stacked vertically on mobile / narrow viewports, side-by-side on desktop.
       */}
       <header className="absolute top-0 left-0 right-0 flex items-start justify-between p-4 sm:p-6 gap-3 z-20">
-        {/* Top Left: Clock */}
-        <div className="flex items-center shrink-0">
+        {/* Top Left: Back button + Clock */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <Link
+            href="/"
+            aria-label="Back to homepage"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-md border border-white/10 font-mono text-xs text-white/75 shadow-md hover:bg-black/70 hover:border-white/20 hover:text-white active:scale-[0.97] transition-all cursor-pointer whitespace-nowrap shrink-0"
+          >
+            <FaArrowLeft aria-hidden="true" className="text-[10px] text-white/50" />
+            <span>back</span>
+          </Link>
           <Clock />
         </div>
 
