@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PlayerClient from "../components/PlayerClient";
 
 export const metadata: Metadata = {
-  title: "Music Room",
+  title: "The Studio",
   description: "Curated ambient and lofi music player with modern arc carousel.",
 };
 
