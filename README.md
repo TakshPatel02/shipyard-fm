@@ -2,11 +2,19 @@
 
 > **Built from nostalgia, runs on music.**
 
-A cozy, time-aware developer workspace that shifts its background with the time of day — paired with a minimal, glassmorphic YouTube music player. No ads, no distractions. Just vibes and code.
+A cozy developer music space with two distinct rooms — the **Music Room** (`/player`) featuring a WebGL wave canvas, 3D arc track carousel, and mood-reactive accent colors, alongside **The Original Room** (`/classic`) with IST time-aware scenes — all powered by a minimal, ad-free YouTube IFrame audio engine.
 
 **Live at:** [shipyard-fm.vercel.app](https://shipyard-fm.vercel.app)
 
-![Shipyard FM — Website Preview](./public/website.png)
+---
+
+## Demo
+
+<video src="./public/Demo.mp4" controls autoplay loop muted playsinline width="100%"></video>
+
+> If the video player doesn't render in your viewer, you can [watch `Demo.mp4` directly](./public/Demo.mp4).
+
+![Shipyard FM — Classic Room Preview](./public/website.png)
 
 ---
 
@@ -16,67 +24,40 @@ If you already listen to music while coding, you're probably doing it in a YouTu
 
 A regular YouTube tab loads the full video player, comments, engagement data, playlist metadata, and ads — even if you're just listening in the background. That adds up over time: in a 30-minute test with the same playlist, a YouTube tab climbed from ~348MB to 557MB+.
 
-Shipyard's tab alone stays flat around ~52MB, but counting the YouTube iframe's own background process too (visible separately in Chrome's Task Manager), Shipyard's real combined footprint is closer to ~110-130MB — still roughly 4-5x lower than a full YouTube tab doing the same job. The gap exists because Shipyard's player uses the YouTube iframe purely for audio — none of the comments, video engagement data, or ad infrastructure ever load.
+Shipyard's tab alone stays flat around ~52MB, but counting the YouTube iframe's own background process too (visible separately in Chrome's Task Manager), Shipyard's real combined footprint is closer to ~110–130MB — still roughly 4–5x lower than a full YouTube tab doing the same job. The gap exists because Shipyard's player uses the YouTube iframe purely for audio — none of the comments, video engagement data, or ad infrastructure ever load.
 
 If you code with music on and don't want that RAM going to a browser tab instead of your IDE or build tools, this is what Shipyard is actually for.
 
 ---
 
-## Features
+## Two Rooms, One Playlist
 
-### Time-Aware Background
+### 1. Music Room (`/player`) — *Best on Desktop*
 
-The background image changes automatically based on your **IST (Indian Standard Time)** time of day — no interaction needed. Each time slot has its own carefully curated scene:
+The redesigned player experience built for laptops and desktops:
 
-| Time Slot   | Hours (IST)       | Vibe                    |
-| ----------- | ----------------- | ----------------------- |
-| Morning     | 05:00 - 10:59     | Warm, golden light      |
-| Afternoon   | 11:00 - 15:59     | Bright, productive      |
-| Evening     | 16:00 - 19:59     | Golden hour glow        |
-| Night       | 20:00 - 23:59     | Cool, dark, focused     |
-| Late Night  | 00:00 - 04:59     | Deep dark, late-night grind |
+- **3D Arc Stack Carousel** — Scroll-wheel and click-driven vertical arc of track cards with spring physics (`motion/react`) and category WebP artwork.
+- **Mood-Reactive WebGL Background** — Powered by OGL (`PatternWaves`), the dot-wave shader and UI `--accent` color smoothly transition whenever the track category changes:
+  - **Spiritual** (`#F5B335`) · **Love** (`#F43F6E`) · **Sad** (`#3B6FE0`) · **Energy** (`#E63946`) · **Chill** (`#2DD4BF`)
+- **Minimal Player Controller** — Play/pause, next/prev, shuffle, repeat/loop, seek scrubber, mute toggle, and full-width volume slider anchored at the bottom-left.
+- **Mobile Preview Fallback** — Because mobile OSes suspend background audio in browser tabs, visiting `/player` on a phone (`pointer: coarse` + narrow viewport) shows the looping `Demo.mp4` preview, an explanation, and a **Copy link** button to open on desktop later.
 
-The transition happens automatically at each slot boundary — pixel-perfect and smooth. You can also click **"change image"** in the top-right to cycle through banners manually.
+### 2. The Original Room (`/classic`)
 
----
+The nostalgic time-aware coding room:
 
-### YouTube Music Player
+- **Time-Aware IST Backgrounds** — Automatically shifts between 5 curated scenes based on **IST (Indian Standard Time)**:
 
-A sleek, floating music player at the bottom of the screen, powered by the **YouTube IFrame API**. It streams audio directly from YouTube — no downloads, no uploads, no storage costs.
+| Time Slot   | Hours (IST)   | Vibe                        |
+| ----------- | ------------- | --------------------------- |
+| Morning     | 05:00 - 10:59 | Warm, golden light          |
+| Afternoon   | 11:00 - 15:59 | Bright, productive          |
+| Evening     | 16:00 - 19:59 | Golden hour glow            |
+| Night       | 20:00 - 23:59 | Cool, dark, focused         |
+| Late Night  | 00:00 - 04:59 | Deep dark, late-night grind |
 
-**Controls:**
-
-- **Play / Pause** — Start or stop the current track
-- **Prev / Next** — Navigate between tracks in the playlist
-- **Volume slider** — Fine-tune the audio level
-- **Mute toggle** — Instantly silence and un-silence
-- **Seek bar** — Click or drag to jump to any point in the track
-- **Video toggle** — Click the spinning vinyl art to reveal/hide the actual YouTube video frame
-
-**Background Audio Watchdog:** Even when you switch tabs or blur the browser window, Shipyard tries to keep your music playing uninterrupted. A background watchdog detects when Chrome or YouTube tries to pause a hidden-tab video and forces it to resume.
-
----
-
-### Aesthetic and Design
-
-- **Glassmorphism UI** — Frosted-glass panels with `backdrop-blur` and translucent borders
-- **Radial vignette mask** — Images are softly dissolved into the black canvas at the edges
-- **Monospace typography** — Entire UI uses `JetBrains Mono` for a coder-native feel
-- **Animated vinyl** — The album thumbnail spins like a record when a track is playing
-- **Pulse indicator** — A live green dot breathes in the player status bar
-- **Responsive layout** — Works cleanly on mobile, tablet, and desktop
-
----
-
-### Live IST Clock
-
-A real-time clock in the top-left corner displays the current **Indian Standard Time** — always accurate, always ticking.
-
----
-
-### YouTube Playlist Link
-
-A direct link to the source YouTube playlist is always visible in the top-right corner for quick access.
+- **Floating Glassmorphic Player & Custom Playlists** — Spinning vinyl art, live IST clock, manual `"change image"` cycle, and support for switching between the default playlist and your own custom YouTube playlist.
+- **Background Audio Watchdog** — Detects when a browser attempts to pause a hidden-tab iframe and resumes playback automatically.
 
 ---
 
@@ -116,13 +97,16 @@ npm run start
 
 | Technology | Purpose |
 | --- | --- |
-| [Next.js 16](https://nextjs.org/) | React framework & routing |
+| [Next.js 16](https://nextjs.org/) | React framework & App Router |
 | [React 19](https://react.dev/) | UI components |
 | [TypeScript](https://www.typescriptlang.org/) | Type safety |
 | [Tailwind CSS v4](https://tailwindcss.com/) | Utility-first styling |
-| [YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference) | Music streaming |
+| [OGL](https://github.com/oframe/ogl) | WebGL `PatternWaves` dot-wave background |
+| [Motion](https://motion.dev/) | Spring physics & UI transitions (`motion/react`) |
+| [React Icons](https://react-icons.github.io/react-icons/) | Crisp UI icons |
+| [YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference) | Audio streaming |
 | [Vercel Analytics](https://vercel.com/analytics) | Usage analytics |
-| [Google Fonts](https://fonts.google.com/) | Inter + JetBrains Mono |
+| [Google Fonts](https://fonts.google.com/) | Instrument Sans, Inter, JetBrains Mono & Fraunces |
 
 ---
 
@@ -131,21 +115,35 @@ npm run start
 ```
 shipyard/
 ├── app/
+│   ├── classic/
+│   │   ├── layout.tsx                 # Classic room metadata
+│   │   └── page.tsx                   # Original time-aware room
+│   ├── player/
+│   │   └── page.tsx                   # Music Room route & metadata
 │   ├── components/
-│   │   ├── Clock.tsx          # Live IST clock
-│   │   └── MusicPlayer.tsx    # Full YouTube music player
+│   │   ├── Clock.tsx                  # Live IST clock
+│   │   ├── CustomPlaylistPanel.tsx    # Custom YouTube playlist manager
+│   │   ├── LabelSlide.tsx             # Animated CTA button label
+│   │   ├── MobilePlayerFallback.tsx   # Mobile Demo.mp4 preview + Copy link
+│   │   ├── MusicPlayer.tsx            # Classic floating vinyl player
+│   │   ├── PatternWaves.tsx           # OGL WebGL interactive wave canvas
+│   │   ├── PlayerArcStack.tsx         # 3D arc track carousel
+│   │   ├── PlayerClient.tsx           # Music Room client + mobile detection
+│   │   └── PlayerController.tsx       # Music Room controls
+│   ├── hooks/
+│   │   └── player.ts                  # Shared YouTube IFrame player hook
 │   ├── lib/
-│   │   ├── music-data.ts      # Track list — add your songs here
-│   │   └── banner-data.ts     # Time-slot background images & logic
-│   ├── globals.css            # Global styles
-│   ├── layout.tsx             # Root layout + SEO metadata
-│   └── page.tsx               # Main page
+│   │   ├── banner-data.ts             # Time-slot background images & logic
+│   │   ├── custom-playlist.ts         # Custom playlist storage helpers
+│   │   └── music-data.ts              # Track list & categories
+│   ├── globals.css                    # Global styles & @property --accent
+│   ├── layout.tsx                     # Root layout + SEO metadata
+│   └── page.tsx                       # Landing page
 ├── public/
-│   ├── shipyard-1.webp        # Morning background
-│   ├── shipyard-2.webp        # Afternoon background
-│   ├── shipyard-3.webp        # Evening background
-│   ├── shipyard-4.webp        # Night background
-│   └── shipyard-5.webp        # Late night background
+│   ├── Demo.mp4                       # New player demo video
+│   ├── thumbs/                        # Category WebP thumbnails
+│   ├── shipyard-1.webp .. 5.webp      # Classic IST time-slot backgrounds
+│   └── website.png                    # Classic preview image
 └── package.json
 ```
 
@@ -184,17 +182,18 @@ export const TRACKS: Track[] = [
   // ... existing tracks ...
 
   // Add your track here
-  { id: "9a4izd3Rvdw", title: "Challa", artist: "Rabbi Shergill" },
+  { id: "9a4izd3Rvdw", title: "Challa", artist: "Rabbi Shergill", category: "energy" },
 ];
 ```
 
-Each track object has three fields:
+Each track object has four fields:
 
-| Field    | Type     | Description             |
-| -------- | -------- | ----------------------- |
-| `id`     | `string` | The YouTube video ID    |
-| `title`  | `string` | The song name           |
-| `artist` | `string` | The artist name         |
+| Field      | Type       | Description                                                        |
+| ---------- | ---------- | ------------------------------------------------------------------ |
+| `id`       | `string`   | The YouTube video ID                                               |
+| `title`    | `string`   | The song name                                                      |
+| `artist`   | `string`   | The artist name                                                    |
+| `category` | `Category` | `"spiritual" \| "love" \| "sad" \| "energy" \| "chill"`            |
 
 ### Step 3 — Test Locally Before Pushing
 
