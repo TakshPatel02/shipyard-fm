@@ -225,14 +225,19 @@ export default function Home() {
         </motion.p>
         <motion.div
           variants={contentItemVariants}
-          className="mt-6 flex w-full flex-col gap-3 sm:flex-row"
+          className="mt-6 flex w-full flex-col gap-3 sm:flex-row sm:items-start"
         >
-          <Link
-            href="/player"
-            className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-[#F4F1EA] px-5 text-sm font-medium text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-glow sm:w-auto"
-          >
-            <LabelSlide>Enter the New Player</LabelSlide>
-          </Link>
+          <div className="flex w-full flex-col items-start gap-1.5 sm:w-auto">
+            <Link
+              href="/player"
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-[#F4F1EA] px-5 text-sm font-medium text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-glow sm:w-auto"
+            >
+              <LabelSlide>Enter the New Player</LabelSlide>
+            </Link>
+            <span className="pl-0.5 text-[11px] font-medium tracking-wide text-[#A9A4B8]/75">
+              Best on desktop
+            </span>
+          </div>
           <Link
             href="/classic"
             className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-border bg-[#14121C] px-5 text-sm font-medium text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-glow sm:w-auto"

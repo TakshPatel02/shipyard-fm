@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useReducedMotion } from "motion/react";
@@ -7,10 +8,42 @@ import { FaArrowLeft } from "react-icons/fa6";
 import PatternWaves from "./PatternWaves";
 import PlayerArcStack from "./PlayerArcStack";
 import PlayerController from "./PlayerController";
+import MobilePlayerFallback from "./MobilePlayerFallback";
 import { usePlayer } from "../hooks/player";
 import { CATEGORIES } from "../lib/music-data";
 
 export default function PlayerClient() {
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(pointer: coarse)");
+    const checkMobile = () => {
+      setIsMobile(mediaQuery.matches && window.innerWidth < 1024);
+    };
+    checkMobile();
+    mediaQuery.addEventListener("change", checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => {
+      mediaQuery.removeEventListener("change", checkMobile);
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
+
+  // Avoid hydration mismatch before mount
+  if (isMobile === null) {
+    return (
+      <main className="relative h-svh min-h-svh w-full overflow-hidden bg-[#07060B]" />
+    );
+  }
+
+  if (isMobile) {
+    return <MobilePlayerFallback />;
+  }
+
+  return <DesktopPlayer />;
+}
+
+function DesktopPlayer() {
   const prefersReducedMotion = useReducedMotion();
 
   const {
